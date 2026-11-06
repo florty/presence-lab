@@ -19,9 +19,9 @@ log = logging.getLogger("bridge")
 state = {
     "connected": False, "presence": None, "targets": None, "distance_cm": None, "heart": None,
     "breath": None, "lux": None, "movement": None, "wifi": None, "uptime": None,
-    "points": [], "points_at": None, "firmware": None, "presence_since": None,
+    "points": [], "points_at": None, "firmware": None, "presence_since": None, "since_exact": False,
 }
-history = deque(maxlen=HISTORY_SECS)  # [epoch_s, heart, breath, distance_cm]
+history = deque(maxlen=HISTORY_SECS)  # [epoch_s, heart, breath, distance_cm, presence]
 version = 0
 
 FIELDS = {
@@ -47,7 +47,7 @@ async def sensor_loop():
     while True:
         client = APIClient(HOST, 6053, None, noise_psk=KEY)
         stopped = asyncio.Event()
-        last_rx = time.time()
+        last_rx = connected_at = time.time()
 
         async def on_stop(expected):
             stopped.set()
@@ -72,6 +72,8 @@ async def sensor_loop():
                     missing = getattr(s, "missing_state", False)
                     value = None if missing else clean(s.state)
                     if name == "person_information" and value != state["presence"]:
+                        # The first reading after a bridge start doesn't tell us when it really began.
+                        put("since_exact", state["presence"] is not None and time.time() - connected_at > 10)
                         put("presence_since", round(time.time()))
                     put(FIELDS[name], value)
 
@@ -100,7 +102,8 @@ async def sensor_loop():
 async def history_loop():
     while True:
         await asyncio.sleep(1)
-        history.append([int(time.time()), state["heart"], state["breath"], state["distance_cm"]])
+        live = state["connected"]
+        history.append([int(time.time())] + [state[k] if live else None for k in ("heart", "breath", "distance_cm", "presence")])
 
 
 async def api_state(_):

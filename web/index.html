@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Office Presence</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231a1a19'/%3E%3Cpath d='M5 25a11 11 0 0 1 22 0M10 25a6 6 0 0 1 12 0' fill='none' stroke='%233987e5' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='25' r='2.5' fill='%23f0efec'/%3E%3C/svg%3E">
 <style>
 :root{color-scheme:light;
   --bg:#f4f4f1;--surface:#fcfcfb;--text:#0b0b0b;--text2:#52514e;--muted:#6f6d68;--grid:#e1e0d9;--border:rgba(11,11,11,.10);
@@ -14,32 +15,41 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:1240px;margin:0 auto;padding:20px 16px 32px;display:grid;gap:14px}
+main{max-width:1280px;margin:0 auto;padding:24px 16px 32px;display:grid;gap:16px}
 header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
 h1{font-size:15px;font-weight:600;margin:0;color:var(--text2)}
 h2{font-size:14px;font-weight:600;margin:0}
-.hero{font-size:clamp(26px,4vw,38px);font-weight:650;letter-spacing:-.01em;line-height:1.15;margin-top:2px}
+.hero-row{display:flex;align-items:center;gap:13px;margin-top:3px}
+.hero{font-size:clamp(27px,4vw,40px);font-weight:650;letter-spacing:-.018em;line-height:1.12}
+.sdot{position:relative;width:15px;height:15px;border-radius:50%;background:var(--muted);flex:none;transition:background .3s}
+.sdot.here{background:var(--good)}
+.sdot.here::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--good);animation:ping 2.4s ease-out infinite}
+.sdot.off{background:var(--warn)}
+@keyframes ping{0%{transform:scale(1);opacity:.5}70%,100%{transform:scale(2.5);opacity:0}}
 .since{color:var(--text2);font-size:14px}
 .pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--text2);border:1px solid var(--border);background:var(--surface);border-radius:99px;padding:4px 11px}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;min-width:0}
-.top{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(280px,1fr);gap:14px}
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start}
-.tile{display:flex;flex-direction:column;gap:2px;min-height:124px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;min-width:0;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.top{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(280px,1fr);gap:16px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:16px}
+.tile{display:flex;flex-direction:column;gap:3px;min-height:132px}
 .label{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px;min-height:20px}
-.value{font-size:34px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
+.value{font-size:38px;font-weight:600;line-height:46px;min-height:46px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
 .value small{font-size:14px;font-weight:500;color:var(--text2);margin-left:3px}
-.value.none{font-size:19px;font-weight:500;color:var(--muted);padding:9px 0 6px}
+.value.none{font-size:19px;font-weight:500;color:var(--muted);letter-spacing:0}
 .sub{font-size:12.5px;color:var(--muted);margin-top:auto}
-.beat{width:11px;height:11px;border-radius:50%;background:var(--series);opacity:0;flex:none}
+.beat{width:15px;height:15px;fill:var(--series);opacity:0;flex:none;transition:opacity .3s}
 .beat.on{opacity:1;animation:beat var(--period,1s) ease-out infinite}
-.breathe{width:13px;height:13px;border-radius:50%;background:var(--series);opacity:0;flex:none}
+.breathe{width:14px;height:14px;border-radius:50%;background:var(--series);opacity:0;flex:none;transition:opacity .3s}
 .breathe.on{opacity:1;animation:breathe var(--period,4s) ease-in-out infinite}
-@keyframes beat{0%{transform:scale(1.45)}35%{transform:scale(.8)}100%{transform:scale(.8)}}
+@keyframes beat{0%{transform:scale(1.2)}35%{transform:scale(.85)}100%{transform:scale(.85)}}
 @keyframes breathe{0%,100%{transform:scale(.45)}50%{transform:scale(1.15)}}
-@media (prefers-reduced-motion:reduce){.beat.on,.breathe.on{animation:none}}
+.meter{height:6px;border-radius:3px;background:var(--series-soft);overflow:hidden;margin:3px 0 5px}
+.meter i{display:block;height:100%;width:0;border-radius:3px;background:var(--series);transition:width .6s}
+@media (prefers-reduced-motion:reduce){.beat.on,.breathe.on,.sdot.here::after{animation:none}}
 .radar-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
-button{font:inherit;font-size:13px;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer}
+button{font:inherit;font-size:13px;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:8px;padding:5px 11px;cursor:pointer;transition:color .15s,border-color .15s}
+button:focus-visible{outline:2px solid var(--series);outline-offset:2px}
 button:hover{color:var(--text);border-color:var(--muted)}
 #radar{display:block;width:100%;height:auto}
 #radar text{font-family:system-ui,sans-serif;fill:var(--muted)}
@@ -50,9 +60,20 @@ button:hover{color:var(--text);border-color:var(--muted)}
 table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;font-variant-numeric:tabular-nums}
 th{font-weight:500;color:var(--muted);text-align:left;padding:3px 8px 3px 0}
 td{color:var(--text2);padding:3px 8px 3px 0;border-top:1px solid var(--grid)}
-.trends{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.trends{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px}
+.chart-sub{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.strip-wrap{position:relative;margin-top:10px}
+#strip{display:flex;gap:2px;height:16px}
+#strip i{display:block;height:100%;min-width:2px;background:var(--grid)}
+#strip i:first-child{border-radius:4px 0 0 4px}
+#strip i:last-child{border-radius:0 4px 4px 0}
+#strip i.on{background:var(--series)}
+#strip i.none{background:repeating-linear-gradient(135deg,var(--grid) 0 3px,transparent 3px 7px)}
+.strip-axis{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:5px}
+.strip-wrap .tip{top:-32px}
 .chart{position:relative;margin-top:6px}
-.chart svg{display:block;width:100%;height:150px;touch-action:none}
+.chart svg{display:block;width:100%;height:150px;touch-action:pan-y}
 .chart text{font:12px system-ui,sans-serif;fill:var(--muted)}
 .empty{position:absolute;inset:0 0 22px 34px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:13px;padding:0 12px}
 .tip{position:absolute;top:2px;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:3px 8px;font-size:12.5px;color:var(--text);white-space:nowrap;display:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
@@ -67,7 +88,7 @@ footer b{font-weight:500;color:var(--text2)}
   <header>
     <div>
       <h1>Office presence sensor</h1>
-      <div class="hero" id="hero">Connecting</div>
+      <div class="hero-row"><i class="sdot" id="sdot"></i><div class="hero" id="hero">Connecting</div></div>
       <div class="since" id="since">&nbsp;</div>
     </div>
     <div class="pill" id="conn"><i class="dot" id="connDot"></i><span id="connText">Connecting</span></div>
@@ -77,30 +98,38 @@ footer b{font-weight:500;color:var(--text2)}
     <div class="card">
       <div class="radar-head">
         <h2>Top-down view from the sensor</h2>
-        <button id="flip" type="button">Flip left and right</button>
+        <button id="flip" type="button" title="Use this if the dot moves the opposite way to you">⇄ Flip left and right</button>
       </div>
-      <svg id="radar" viewBox="0 0 1000 530" role="img" aria-label="Top-down map of radar targets. Exact values are in the table below."></svg>
+      <svg id="radar" viewBox="0 0 1000 530" role="img" aria-label="Top-down map of radar targets. Exact values are in the table below."><defs><radialGradient id="fan" gradientUnits="userSpaceOnUse" cx="500" cy="505" r="470"><stop offset="0" style="stop-color:var(--series);stop-opacity:.16"/><stop offset="1" style="stop-color:var(--series);stop-opacity:.015"/></radialGradient></defs><g id="radarG"></g></svg>
       <div class="legend" id="legend">
         <span><i class="lg" style="background:var(--series)"></i>Target</span>
-        <span><i class="lg" style="border:2px solid var(--series)"></i>Outer ring: moving</span>
+        <span><i class="lg" style="border:2px solid var(--series)"></i>Pulsing ring: moving</span>
         <span><i class="lg" style="border:2px dashed var(--echo)"></i>Echo, not counted as a person</span>
         <span><i class="lg" style="background:var(--series-soft);border:1px solid var(--grid)"></i>Vital signs range, about 1.5 m</span>
       </div>
-      <table id="tbl" hidden><thead><tr><th>Target</th><th>Distance</th><th>Sideways</th><th>Forward</th><th>State</th></tr></thead><tbody></tbody></table>
+      <table id="tbl"><thead><tr><th>Target</th><th>Distance</th><th>Sideways</th><th>Forward</th><th>State</th></tr></thead><tbody></tbody></table>
     </div>
     <div class="tiles">
       <div class="card tile"><div class="label">People</div><div class="value" id="vPeople"></div><div class="sub" id="sPeople"></div></div>
       <div class="card tile"><div class="label">Distance</div><div class="value" id="vDist"></div><div class="sub" id="sDist"></div></div>
-      <div class="card tile"><div class="label">Heart rate <i class="beat" id="beat" aria-hidden="true"></i></div><div class="value" id="vHeart"></div><div class="sub" id="sHeart"></div></div>
+      <div class="card tile"><div class="label">Heart rate <svg class="beat" id="beat" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8.5-5.2-10.3-10.4C.5 6.8 3 3.5 6.6 3.5c2.2 0 4.2 1.2 5.4 3.1 1.2-1.9 3.2-3.1 5.4-3.1 3.6 0 6.1 3.3 4.9 7.1C20.5 15.8 12 21 12 21z"/></svg></div><div class="value" id="vHeart"></div><div class="sub" id="sHeart"></div></div>
       <div class="card tile"><div class="label">Breathing <i class="breathe" id="breathe" aria-hidden="true"></i></div><div class="value" id="vBreath"></div><div class="sub" id="sBreath"></div></div>
-      <div class="card tile"><div class="label">Movement</div><div class="value" id="vMove"></div><div class="sub">Radar frames with movement, last 10 s</div></div>
-      <div class="card tile"><div class="label">Light</div><div class="value" id="vLux"></div><div class="sub">Ambient level at the sensor</div></div>
+      <div class="card tile"><div class="label">Movement</div><div class="value" id="vMove"></div><div class="meter" aria-hidden="true"><i id="mMove"></i></div><div class="sub">Frames with movement, last 10 s</div></div>
+      <div class="card tile"><div class="label">Light</div><div class="value" id="vLux"></div><div class="sub" id="sLux"></div></div>
     </div>
   </section>
 
+  <section class="card">
+    <div class="chart-head"><h2>Presence, last 15 minutes</h2>
+      <div class="legend" style="margin:0"><span><i class="lg" style="background:var(--series);border-radius:3px"></i>Present</span><span><i class="lg" style="background:var(--grid);border-radius:3px"></i>Empty</span><span><i class="lg" style="background:repeating-linear-gradient(135deg,var(--muted) 0 2px,transparent 2px 4px);border-radius:3px"></i>No data</span></div>
+    </div>
+    <div class="strip-wrap"><div id="strip" role="img" aria-label="Presence over the last 15 minutes"></div><div class="tip" id="stripTip"></div></div>
+    <div class="strip-axis"><span>15 min ago</span><span>now</span></div>
+  </section>
+
   <section class="trends">
-    <div class="card"><h2>Heart rate, last 15 minutes (bpm)</h2><div class="chart" id="cHeart"></div></div>
-    <div class="card"><h2>Breathing, last 15 minutes (breaths per minute)</h2><div class="chart" id="cBreath"></div></div>
+    <div class="card"><div class="chart-head"><h2>Heart rate <span class="chart-sub">bpm, last 15 min</span></h2><span class="chart-sub" id="sumHeart"></span></div><div class="chart" id="cHeart"></div></div>
+    <div class="card"><div class="chart-head"><h2>Breathing <span class="chart-sub">per minute, last 15 min</span></h2><span class="chart-sub" id="sumBreath"></span></div><div class="chart" id="cBreath"></div></div>
   </section>
 
   <footer>
@@ -146,8 +175,9 @@ function setValue(el, val, unit, emptyText) {
 
 /* ---------- radar ---------- */
 const CX = 500, CY = 505, RPX = 470;
-const radar = $('radar');
-let tracks = [], nextId = 1, maxSeen = [], rangeM = 2;
+const radar = $('radar'), radarG = $('radarG');
+let tracks = [], nextId = 1, maxSeen = [], rangeM = 2, shownRange = 2, liveNow = false;
+const calm = matchMedia('(prefers-reduced-motion:reduce)').matches;
 const hasPositions = () => S.points_at != null;
 
 function ingestPoints(points) {
@@ -173,19 +203,32 @@ function drawRadar() {
   maxSeen = maxSeen.filter(m => t - m[0] < 30);
   const far = Math.max(S.distance_cm ? S.distance_cm / 100 : 0, ...maxSeen.map(m => m[1]), 0);
   rangeM = far <= 1.9 ? 2 : far <= 3.8 ? 4 : far <= 5.7 ? 6 : 8;
-  const k = RPX / rangeM;
+  shownRange = calm ? rangeM : shownRange + (rangeM - shownRange) * 0.06;
+  const k = RPX / shownRange;
   const u = 1000 / Math.max(radar.clientWidth, 1);
   const fs = 12.5 * u, fsv = 14.5 * u;
   const px = (x, y) => [CX + (flip ? -x : x) * k, CY - y * k];
   const arc = r => `M${CX - r} ${CY}A${r} ${r} 0 0 1 ${CX + r} ${CY}`;
-  let h = `<path d="${arc(1.5 * k)}Z" fill="var(--series-soft)"/>`;
-  for (let m = 1; m <= rangeM; m++) {
-    h += `<path d="${arc(m * k)}" fill="none" stroke="var(--muted)" stroke-opacity=".45" stroke-width="${u}"/>`;
+  const ring = `stroke="var(--muted)" stroke-opacity=".32" stroke-width="${u}"`;
+  let h = `<path d="${arc(RPX)}Z" fill="url(#fan)"/>`;
+  if (1.5 * k < RPX) h += `<path d="${arc(1.5 * k)}Z" fill="var(--series-soft)"/>`;
+  for (const a of [-60, -30, 0, 30, 60]) {
+    const rad = a * Math.PI / 180;
+    h += `<line x1="${CX}" y1="${CY}" x2="${CX + Math.sin(rad) * RPX}" y2="${CY - Math.cos(rad) * RPX}" ${ring} stroke-dasharray="${2 * u} ${5 * u}"/>`;
+  }
+  for (let m = 1; m * k <= RPX + 1; m++) {
+    h += `<path d="${arc(m * k)}" fill="none" ${ring}/>`;
     h += `<text font-size="${fs}" x="${CX + 6 * u}" y="${CY - m * k + 15 * u}">${m} m</text>`;
   }
-  h += `<line x1="${CX - RPX}" y1="${CY}" x2="${CX + RPX}" y2="${CY}" stroke="var(--muted)" stroke-opacity=".45" stroke-width="${u}"/>`;
+  h += `<line x1="${CX - RPX}" y1="${CY}" x2="${CX + RPX}" y2="${CY}" ${ring}/>`;
+  if (liveNow && !calm) {
+    for (const off of [0, 0.5]) {
+      const q = ((t / 4 + off) % 1);
+      h += `<path d="${arc(q * RPX)}" fill="none" stroke="var(--series)" stroke-opacity="${(0.28 * (1 - q)).toFixed(3)}" stroke-width="${1.5 * u}"/>`;
+    }
+  }
   h += `<rect x="${CX - 11 * u}" y="${CY - 4 * u}" width="${22 * u}" height="${8 * u}" rx="${3 * u}" fill="var(--text2)"/>`;
-  h += `<text font-size="${fs}" x="${CX + 18 * u}" y="${CY - 3 * u}">Sensor</text>`;
+  h += `<text font-size="${fs}" x="${CX + 18 * u}" y="${CY - 4 * u}">Sensor</text>`;
 
   const counted = S.presence === true;
   if (!tracks.length && S.distance_cm) {
@@ -197,13 +240,17 @@ function drawRadar() {
     const last = tr.trail[tr.trail.length - 1];
     if (!last || Math.hypot(last[0] - tr.x, last[1] - tr.y) > 0.015) { tr.trail.push([tr.x, tr.y]); if (tr.trail.length > 70) tr.trail.shift(); }
     const [X, Y] = px(tr.x, tr.y);
-    if (tr.trail.length > 1) {
-      const pts = tr.trail.map(p => px(p[0], p[1]).map(v => v.toFixed(1)).join(',')).join(' ');
-      h += `<polyline points="${pts}" fill="none" stroke="${counted ? 'var(--series)' : 'var(--echo)'}" stroke-width="${2 * u}" stroke-linejoin="round" opacity=".28"/>`;
+    for (let i = 1; i < tr.trail.length; i++) {
+      const [a, b] = [px(...tr.trail[i - 1]), px(...tr.trail[i])];
+      h += `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${counted ? 'var(--series)' : 'var(--echo)'}" stroke-width="${2 * u}" stroke-linecap="round" opacity="${(0.4 * i / tr.trail.length).toFixed(3)}"/>`;
     }
     const moving = t - tr.moveAt < 1.5;
     if (counted) {
-      if (moving) h += `<circle cx="${X}" cy="${Y}" r="${13 * u}" fill="none" stroke="var(--series)" stroke-width="${2 * u}" opacity=".55"/>`;
+      h += `<circle cx="${X}" cy="${Y}" r="${15 * u}" fill="var(--series)" opacity=".16"/>`;
+      if (moving) {
+        const q = calm ? 0.2 : (t * 0.9) % 1;
+        h += `<circle cx="${X}" cy="${Y}" r="${(11 + 13 * q) * u}" fill="none" stroke="var(--series)" stroke-width="${2 * u}" opacity="${(0.7 * (1 - q)).toFixed(3)}"/>`;
+      }
       h += `<circle cx="${X}" cy="${Y}" r="${8 * u}" fill="var(--series)" stroke="var(--surface)" stroke-width="${2 * u}"/>`;
     } else {
       h += `<circle cx="${X}" cy="${Y}" r="${7 * u}" fill="none" stroke="var(--echo)" stroke-width="${2 * u}" stroke-dasharray="${3 * u} ${3 * u}"/>`;
@@ -211,30 +258,48 @@ function drawRadar() {
     const right = X < CX + RPX - 80 * u;
     h += `<text class="val" font-size="${fsv}" x="${X + (right ? 18 : -18) * u}" y="${Y + 5 * u}" text-anchor="${right ? 'start' : 'end'}">${Math.hypot(tr.x, tr.y).toFixed(2)} m</text>`;
   }
-  radar.innerHTML = h;
+  if (!tracks.length && !S.distance_cm) {
+    h += `<text font-size="${fsv}" x="${CX}" y="${CY - RPX * 0.56}" text-anchor="middle">${liveNow ? 'Nothing detected' : 'No data from the sensor'}</text>`;
+  }
+  radarG.innerHTML = h;
 }
 
 function drawTable() {
   const tbl = $('tbl'), t = NOW();
-  tbl.hidden = !tracks.length;
   const rows = tracks.map((tr, i) => {
     const moving = t - tr.moveAt < 1.5, x = flip ? -tr.x : tr.x;
     const st = S.presence === true ? (moving ? 'Moving' : 'Still') : 'Echo';
     return `<tr><td>${i + 1}</td><td>${Math.hypot(tr.x, tr.y).toFixed(2)} m</td><td>${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(2)} m</td><td>${tr.y.toFixed(2)} m</td><td>${st}</td></tr>`;
   });
-  tbl.tBodies[0].innerHTML = rows.join('');
+  tbl.tBodies[0].innerHTML = rows.join('') || '<tr><td colspan="5">No targets on the map right now</td></tr>';
 }
 
 /* ---------- trends: one chart per measure, each on its own axis ---------- */
+function median(a) { const s = a.slice().sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; }
+/* 5 s median, so single-frame radar spikes don't dominate the line */
+function smooth(hist) {
+  return hist.map((p, i) => {
+    if (p[1] == null) return p;
+    const w = [];
+    for (let j = Math.max(0, i - 2); j <= Math.min(hist.length - 1, i + 2); j++) if (hist[j][1] != null) w.push(hist[j][1]);
+    return [p[0], median(w)];
+  });
+}
+function recent(arr, secs) {
+  const from = NOW() - secs, v = [];
+  for (let i = arr.length - 1; i >= 0 && arr[i][0] >= from; i--) if (arr[i][1] != null) v.push(arr[i][1]);
+  return v.length ? median(v) : null;
+}
 function makeChart(host, opts) {
   let W = 600; const H = 150, L = 34, R = 8, T = 8, B = 22;
-  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.label}"><g class="a"></g><path class="p" fill="none" stroke="var(--series)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path><line class="x" y1="${T}" y2="${H - B}" stroke="var(--muted)" vector-effect="non-scaling-stroke" visibility="hidden"></line><g class="d"></g></svg><div class="empty" hidden>${opts.empty}</div><div class="tip"></div>`;
-  const svg = host.querySelector('svg'), path = host.querySelector('.p'), axis = host.querySelector('.a'), lineX = host.querySelector('.x'), lone = host.querySelector('.d');
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.label}"><g class="a"></g><path class="ar" fill="var(--series-soft)"></path><path class="p" fill="none" stroke="var(--series)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path><line class="x" y1="${T}" y2="${H - B}" stroke="var(--muted)" vector-effect="non-scaling-stroke" visibility="hidden"></line><g class="d"></g></svg><div class="empty" hidden>${opts.empty}</div><div class="tip"></div>`;
+  const svg = host.querySelector('svg'), path = host.querySelector('.p'), area = host.querySelector('.ar'), axis = host.querySelector('.a'), lineX = host.querySelector('.x'), lone = host.querySelector('.d');
   const tip = host.querySelector('.tip'), empty = host.querySelector('.empty');
   let data = [], t1 = 0, y0 = 0, y1 = 1;
   const xOf = t => L + (1 - (t1 - t) / HISTORY) * (W - L - R);
   const yOf = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
-  function draw(hist) {
+  function draw(raw) {
+    const hist = smooth(raw);
     W = Math.max(240, Math.round(host.clientWidth));
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     data = hist.filter(d => d[1] != null);
@@ -251,16 +316,25 @@ function makeChart(host, opts) {
     }
     a += `<text x="${L}" y="${H - 5}">15 min ago</text><text x="${W - R}" y="${H - 5}" text-anchor="end">now</text>`;
     axis.innerHTML = a;
-    let d = '', prev = null, isolated = '';
+    let d = '', ar = '', prev = null, isolated = '', runStart = null;
+    const base = (H - B).toFixed(1);
+    const closeRun = () => { if (runStart != null) ar += `L${xOf(prev).toFixed(1)} ${base}L${xOf(runStart).toFixed(1)} ${base}Z`; runStart = null; };
     hist.forEach((p, i) => {
-      if (p[1] == null) { prev = null; return; }
+      if (p[1] == null) { closeRun(); prev = null; return; }
       const gap = prev == null || p[0] - prev > 5;
-      d += (gap ? 'M' : 'L') + xOf(p[0]).toFixed(1) + ' ' + yOf(p[1]).toFixed(1);
+      if (gap) { closeRun(); runStart = p[0]; }
+      const seg = (gap ? 'M' : 'L') + xOf(p[0]).toFixed(1) + ' ' + yOf(p[1]).toFixed(1);
+      d += seg; ar += seg;
       const nxt = hist[i + 1];
       if (gap && (!nxt || nxt[1] == null)) isolated += `<circle cx="${xOf(p[0])}" cy="${yOf(p[1])}" r="3" fill="var(--series)"/>`;
       prev = p[0];
     });
+    closeRun();
     path.setAttribute('d', d);
+    area.setAttribute('d', ar);
+    if (opts.sum) {
+      opts.sum.textContent = vals.length ? `avg ${Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)}, range ${Math.round(Math.min(...vals))}–${Math.round(Math.max(...vals))}` : '';
+    }
     lone.innerHTML = isolated;
     empty.hidden = data.length > 0;
   }
@@ -283,9 +357,40 @@ function makeChart(host, opts) {
   return { draw };
 }
 const EMPTY = 'No readings yet. Needs a still person within about 1.5 m of the sensor.';
-const chartH = makeChart($('cHeart'), { label: 'Heart rate over the last 15 minutes', unit: 'bpm', step: 20, domain: [60, 100], empty: EMPTY });
-const chartB = makeChart($('cBreath'), { label: 'Breathing rate over the last 15 minutes', unit: 'breaths/min', step: 5, domain: [10, 25], empty: EMPTY });
-let hHeart = [], hBreath = [];
+const chartH = makeChart($('cHeart'), { label: 'Heart rate over the last 15 minutes', unit: 'bpm', sum: $('sumHeart'), step: 20, domain: [60, 100], empty: EMPTY });
+const chartB = makeChart($('cBreath'), { label: 'Breathing rate over the last 15 minutes', unit: 'breaths/min', sum: $('sumBreath'), step: 5, domain: [10, 25], empty: EMPTY });
+let hHeart = [], hBreath = [], hDist = [], hPres = [];
+
+/* ---------- presence strip ---------- */
+const strip = $('strip'), stripTip = $('stripTip');
+let runs = [];
+function drawStrip() {
+  const t1 = NOW(), t0 = t1 - HISTORY;
+  runs = [];
+  const add = (from, to, kind) => {
+    const last = runs[runs.length - 1];
+    if (last && last.kind === kind) last.to = to; else runs.push({ from, to, kind });
+  };
+  let cursor = t0;
+  for (const [t, v] of hPres) {
+    if (t < t0) continue;
+    if (t - cursor > 5) add(cursor, t, 'none');
+    add(Math.max(cursor, t - 1), t, v === true ? 'on' : v === false ? 'off' : 'none');
+    cursor = t;
+  }
+  if (t1 - cursor > 0) add(cursor, t1, t1 - cursor > 5 ? 'none' : (runs.length ? runs[runs.length - 1].kind : 'none'));
+  strip.innerHTML = runs.map(r => `<i class="${r.kind === 'off' ? '' : r.kind}" style="flex:${(r.to - r.from).toFixed(0)} 1 0"></i>`).join('');
+}
+strip.addEventListener('pointermove', e => {
+  const rect = strip.getBoundingClientRect(), at = NOW() - HISTORY + (e.clientX - rect.left) / rect.width * HISTORY;
+  const r = runs.find(x => at >= x.from && at <= x.to);
+  if (!r) { stripTip.style.display = 'none'; return; }
+  const clock = s => new Date(s * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  stripTip.style.display = 'block';
+  stripTip.innerHTML = `<b>${r.kind === 'on' ? 'Present' : r.kind === 'off' ? 'Empty' : 'No data'}</b> ${clock(r.from)} to ${clock(r.to)}`;
+  stripTip.style.left = Math.max(0, Math.min(rect.width - stripTip.offsetWidth, e.clientX - rect.left - stripTip.offsetWidth / 2)) + 'px';
+});
+strip.addEventListener('pointerleave', () => { stripTip.style.display = 'none'; });
 
 /* ---------- state -> page ---------- */
 function render() {
@@ -295,24 +400,30 @@ function render() {
   dot.style.background = live ? 'var(--good)' : (pageOk ? 'var(--warn)' : 'var(--crit)');
   $('connText').textContent = live ? 'Live' : (pageOk ? 'Sensor offline, reconnecting' : 'Page lost its connection');
 
+  liveNow = live;
   const p = live ? S.presence : null;
-  $('hero').textContent = !live ? 'No data' : p === true ? 'Someone is here' : p === false ? 'Room looks empty' : 'Waiting for the sensor';
-  $('since').textContent = live && p != null && S.presence_since ? 'For ' + fmtDur(NOW() - S.presence_since) : ' ';
+  const heroText = !live ? 'No data' : p === true ? 'Someone is here' : p === false ? 'Room looks empty' : 'Waiting for the sensor';
+  $('hero').textContent = heroText;
+  document.title = heroText + ' · Office';
+  $('sdot').className = 'sdot' + (p === true ? ' here' : !live ? ' off' : '');
+  $('since').textContent = live && p != null && S.presence_since ? (S.since_exact ? 'For ' : 'For at least ') + fmtDur(NOW() - S.presence_since) : '\u00a0';
 
   const dead = !live;
   const count = dead ? null : p === false ? 0 : S.targets;
   setValue($('vPeople'), count == null ? null : Math.round(count), '', 'No reading');
   $('sPeople').textContent = (!dead && p === false && S.targets > 0) ? 'Radar echo ignored, no recent activity' : 'Radar estimate';
 
-  const dist = dead || !S.distance_cm ? null : (S.distance_cm / 100).toFixed(2);
+  const dcm = dead || !S.distance_cm ? null : (recent(hDist, 3) ?? S.distance_cm);
+  const dist = dcm == null ? null : (dcm / 100).toFixed(2);
   setValue($('vDist'), dist, 'm', 'No reading');
-  $('sDist').textContent = 'To the main target';
+  $('sDist').textContent = dist == null ? 'Nothing in range right now' : 'To the main target';
 
-  const hr = dead ? null : S.heart, br = dead ? null : S.breath;
+  const hr = dead || S.heart == null ? null : (recent(hHeart, 10) ?? S.heart);
+  const br = dead || S.breath == null ? null : (recent(hBreath, 10) ?? S.breath);
   setValue($('vHeart'), hr == null ? null : Math.round(hr), 'bpm', 'No reading');
   setValue($('vBreath'), br == null ? null : Math.round(br), '/min', 'No reading');
-  $('sHeart').textContent = hr != null ? 'Latest reading' : lastHeartAt ? 'Last reading ' + fmtAgo(lastHeartAt) : 'Needs a still person within 1.5 m';
-  $('sBreath').textContent = br != null ? 'Latest reading' : lastBreathAt ? 'Last reading ' + fmtAgo(lastBreathAt) : 'Needs a still person within 1.5 m';
+  $('sHeart').textContent = hr != null ? '10 s median' : lastHeartAt ? 'Last reading ' + fmtAgo(lastHeartAt) : 'Needs a still person within 1.5 m';
+  $('sBreath').textContent = br != null ? '10 s median' : lastBreathAt ? 'Last reading ' + fmtAgo(lastBreathAt) : 'Needs a still person within 1.5 m';
   const beat = $('beat'), bre = $('breathe');
   beat.classList.toggle('on', hr != null && hr > 0);
   bre.classList.toggle('on', br != null && br > 0);
@@ -320,10 +431,13 @@ function render() {
   if (br > 0) bre.style.setProperty('--period', (60 / br).toFixed(2) + 's');
 
   setValue($('vMove'), dead || S.movement == null ? null : Math.round(S.movement), '', 'No reading');
+  $('mMove').style.width = (dead || S.movement == null ? 0 : Math.min(100, S.movement)) + '%';
+  const lx = dead ? null : S.lux;
+  $('sLux').textContent = lx == null ? 'At the sensor' : lx < 2 ? 'Dark' : lx < 50 ? 'Dim' : lx < 500 ? 'Normal indoor light' : 'Bright';
   setValue($('vLux'), dead || S.lux == null ? null : (S.lux < 10 ? S.lux.toFixed(1) : Math.round(S.lux)), 'lx', 'No reading');
 
   const w = S.wifi;
-  $('fWifi').textContent = w == null ? '–' : Math.round(w) + ' dBm' + (w <= -80 ? ', weak' : '');
+  $('fWifi').textContent = w == null ? '–' : Math.round(w) + ' dBm' + (w <= -85 ? ', very weak' : w <= -75 ? ', weak' : ', good');
   $('fUp').textContent = S.uptime == null ? '–' : fmtDur(S.uptime);
   $('fFw').textContent = S.firmware || '–';
   drawTable();
@@ -343,11 +457,11 @@ window.applyState = applyState;
 function sample() {
   const t = Math.floor(NOW());
   const live = S.connected && NOW() - lastMsg < 10;
-  for (const [arr, v] of [[hHeart, live ? S.heart : null], [hBreath, live ? S.breath : null]]) {
+  for (const [arr, v] of [[hHeart, live ? S.heart : null], [hBreath, live ? S.breath : null], [hDist, live ? S.distance_cm : null], [hPres, live ? S.presence : null]]) {
     arr.push([t, v]);
     while (arr.length && arr[0][0] < t - HISTORY) arr.shift();
   }
-  chartH.draw(hHeart); chartB.draw(hBreath);
+  chartH.draw(hHeart); chartB.draw(hBreath); drawStrip();
 }
 
 async function boot() {
@@ -359,6 +473,8 @@ async function boot() {
     const r = await (await fetch('api/state')).json();
     hHeart = r.history.map(h => [h[0], h[1]]);
     hBreath = r.history.map(h => [h[0], h[2]]);
+    hDist = r.history.map(h => [h[0], h[3]]);
+    hPres = r.history.map(h => [h[0], h[4]]);
     for (const h of r.history) { if (h[1] != null) lastHeartAt = h[0]; if (h[2] != null) lastBreathAt = h[0]; }
     applyState(r.state);
   } catch (e) {}
