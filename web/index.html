@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Office Presence</title>
+<style>
+:root{color-scheme:light;
+  --bg:#f4f4f1;--surface:#fcfcfb;--text:#0b0b0b;--text2:#52514e;--muted:#6f6d68;--grid:#e1e0d9;--border:rgba(11,11,11,.10);
+  --series:#2a78d6;--series-soft:rgba(42,120,214,.09);--good:#0ca30c;--warn:#fab219;--crit:#d03b3b;--echo:#898781}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;
+  --bg:#111110;--surface:#1a1a19;--text:#f0efec;--text2:#c3c2b7;--muted:#98968f;--grid:#2c2c2a;--border:rgba(255,255,255,.10);
+  --series:#3987e5;--series-soft:rgba(57,135,229,.12);--echo:#898781}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1240px;margin:0 auto;padding:20px 16px 32px;display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+h1{font-size:15px;font-weight:600;margin:0;color:var(--text2)}
+h2{font-size:14px;font-weight:600;margin:0}
+.hero{font-size:clamp(26px,4vw,38px);font-weight:650;letter-spacing:-.01em;line-height:1.15;margin-top:2px}
+.since{color:var(--text2);font-size:14px}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--text2);border:1px solid var(--border);background:var(--surface);border-radius:99px;padding:4px 11px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;min-width:0}
+.top{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(280px,1fr);gap:14px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start}
+.tile{display:flex;flex-direction:column;gap:2px;min-height:124px}
+.label{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px;min-height:20px}
+.value{font-size:34px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
+.value small{font-size:14px;font-weight:500;color:var(--text2);margin-left:3px}
+.value.none{font-size:19px;font-weight:500;color:var(--muted);padding:9px 0 6px}
+.sub{font-size:12.5px;color:var(--muted);margin-top:auto}
+.beat{width:11px;height:11px;border-radius:50%;background:var(--series);opacity:0;flex:none}
+.beat.on{opacity:1;animation:beat var(--period,1s) ease-out infinite}
+.breathe{width:13px;height:13px;border-radius:50%;background:var(--series);opacity:0;flex:none}
+.breathe.on{opacity:1;animation:breathe var(--period,4s) ease-in-out infinite}
+@keyframes beat{0%{transform:scale(1.45)}35%{transform:scale(.8)}100%{transform:scale(.8)}}
+@keyframes breathe{0%,100%{transform:scale(.45)}50%{transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.beat.on,.breathe.on{animation:none}}
+.radar-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+button{font:inherit;font-size:13px;color:var(--text2);background:transparent;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer}
+button:hover{color:var(--text);border-color:var(--muted)}
+#radar{display:block;width:100%;height:auto}
+#radar text{font-family:system-ui,sans-serif;fill:var(--muted)}
+#radar text.val{fill:var(--text);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--text2);margin-top:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.lg{width:11px;height:11px;border-radius:50%;flex:none}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;font-variant-numeric:tabular-nums}
+th{font-weight:500;color:var(--muted);text-align:left;padding:3px 8px 3px 0}
+td{color:var(--text2);padding:3px 8px 3px 0;border-top:1px solid var(--grid)}
+.trends{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart{position:relative;margin-top:6px}
+.chart svg{display:block;width:100%;height:150px;touch-action:none}
+.chart text{font:12px system-ui,sans-serif;fill:var(--muted)}
+.empty{position:absolute;inset:0 0 22px 34px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:13px;padding:0 12px}
+.tip{position:absolute;top:2px;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:3px 8px;font-size:12.5px;color:var(--text);white-space:nowrap;display:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.tip b{font-weight:600}
+footer{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:12.5px;color:var(--muted)}
+footer b{font-weight:500;color:var(--text2)}
+@media (max-width:860px){.top,.trends{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Office presence sensor</h1>
+      <div class="hero" id="hero">Connecting</div>
+      <div class="since" id="since">&nbsp;</div>
+    </div>
+    <div class="pill" id="conn"><i class="dot" id="connDot"></i><span id="connText">Connecting</span></div>
+  </header>
+
+  <section class="top">
+    <div class="card">
+      <div class="radar-head">
+        <h2>Top-down view from the sensor</h2>
+        <button id="flip" type="button">Flip left and right</button>
+      </div>
+      <svg id="radar" viewBox="0 0 1000 530" role="img" aria-label="Top-down map of radar targets. Exact values are in the table below."></svg>
+      <div class="legend" id="legend">
+        <span><i class="lg" style="background:var(--series)"></i>Target</span>
+        <span><i class="lg" style="border:2px solid var(--series)"></i>Outer ring: moving</span>
+        <span><i class="lg" style="border:2px dashed var(--echo)"></i>Echo, not counted as a person</span>
+        <span><i class="lg" style="background:var(--series-soft);border:1px solid var(--grid)"></i>Vital signs range, about 1.5 m</span>
+      </div>
+      <table id="tbl" hidden><thead><tr><th>Target</th><th>Distance</th><th>Sideways</th><th>Forward</th><th>State</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="tiles">
+      <div class="card tile"><div class="label">People</div><div class="value" id="vPeople"></div><div class="sub" id="sPeople"></div></div>
+      <div class="card tile"><div class="label">Distance</div><div class="value" id="vDist"></div><div class="sub" id="sDist"></div></div>
+      <div class="card tile"><div class="label">Heart rate <i class="beat" id="beat" aria-hidden="true"></i></div><div class="value" id="vHeart"></div><div class="sub" id="sHeart"></div></div>
+      <div class="card tile"><div class="label">Breathing <i class="breathe" id="breathe" aria-hidden="true"></i></div><div class="value" id="vBreath"></div><div class="sub" id="sBreath"></div></div>
+      <div class="card tile"><div class="label">Movement</div><div class="value" id="vMove"></div><div class="sub">Radar frames with movement, last 10 s</div></div>
+      <div class="card tile"><div class="label">Light</div><div class="value" id="vLux"></div><div class="sub">Ambient level at the sensor</div></div>
+    </div>
+  </section>
+
+  <section class="trends">
+    <div class="card"><h2>Heart rate, last 15 minutes (bpm)</h2><div class="chart" id="cHeart"></div></div>
+    <div class="card"><h2>Breathing, last 15 minutes (breaths per minute)</h2><div class="chart" id="cBreath"></div></div>
+  </section>
+
+  <footer>
+    <span>Wi-Fi <b id="fWifi">–</b></span>
+    <span>Sensor uptime <b id="fUp">–</b></span>
+    <span>ESPHome <b id="fFw">–</b></span>
+    <span>Readings are estimates, not medical measurements.</span>
+  </footer>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const NOW = () => Date.now() / 1000;
+const NS = 'http://www.w3.org/2000/svg';
+const HISTORY = 900;
+let S = {};
+let lastMsg = 0;
+let lastHeartAt = null, lastBreathAt = null;
+let flip = false;
+try { flip = localStorage.getItem('presence-flip') === '1'; } catch (e) {}
+
+function fmtAgo(t) {
+  if (t == null) return '';
+  const s = Math.max(0, Math.round(NOW() - t));
+  if (s < 5) return 'just now';
+  if (s < 60) return s + ' s ago';
+  if (s < 3600) return Math.round(s / 60) + ' min ago';
+  return Math.round(s / 3600) + ' h ago';
+}
+function fmtDur(s) {
+  if (s == null) return '–';
+  s = Math.round(s);
+  if (s < 60) return s + ' s';
+  if (s < 3600) return Math.floor(s / 60) + ' min';
+  if (s < 86400) return Math.floor(s / 3600) + ' h ' + Math.floor(s % 3600 / 60) + ' min';
+  return Math.floor(s / 86400) + ' d ' + Math.floor(s % 86400 / 3600) + ' h';
+}
+function setValue(el, val, unit, emptyText) {
+  if (val == null) { el.className = 'value none'; el.textContent = emptyText; return; }
+  el.className = 'value';
+  el.innerHTML = val + (unit ? '<small>' + unit + '</small>' : '');
+}
+
+/* ---------- radar ---------- */
+const CX = 500, CY = 505, RPX = 470;
+const radar = $('radar');
+let tracks = [], nextId = 1, maxSeen = [], rangeM = 2;
+const hasPositions = () => S.points_at != null;
+
+function ingestPoints(points) {
+  const t = NOW();
+  const unused = tracks.slice();
+  for (const [x, y, doppler] of points) {
+    let best = null, bestD = 0.8;
+    for (const tr of unused) {
+      const d = Math.hypot(tr.tx - x, tr.ty - y);
+      if (d < bestD) { bestD = d; best = tr; }
+    }
+    if (best) unused.splice(unused.indexOf(best), 1);
+    else { best = { id: nextId++, x, y, tx: x, ty: y, trail: [], moveAt: 0 }; tracks.push(best); }
+    best.tx = x; best.ty = y; best.seen = t;
+    if (doppler !== 0) best.moveAt = t;
+    maxSeen.push([t, Math.hypot(x, y)]);
+  }
+}
+
+function drawRadar() {
+  const t = NOW();
+  tracks = tracks.filter(tr => t - tr.seen < 1.2);
+  maxSeen = maxSeen.filter(m => t - m[0] < 30);
+  const far = Math.max(S.distance_cm ? S.distance_cm / 100 : 0, ...maxSeen.map(m => m[1]), 0);
+  rangeM = far <= 1.9 ? 2 : far <= 3.8 ? 4 : far <= 5.7 ? 6 : 8;
+  const k = RPX / rangeM;
+  const u = 1000 / Math.max(radar.clientWidth, 1);
+  const fs = 12.5 * u, fsv = 14.5 * u;
+  const px = (x, y) => [CX + (flip ? -x : x) * k, CY - y * k];
+  const arc = r => `M${CX - r} ${CY}A${r} ${r} 0 0 1 ${CX + r} ${CY}`;
+  let h = `<path d="${arc(1.5 * k)}Z" fill="var(--series-soft)"/>`;
+  for (let m = 1; m <= rangeM; m++) {
+    h += `<path d="${arc(m * k)}" fill="none" stroke="var(--muted)" stroke-opacity=".45" stroke-width="${u}"/>`;
+    h += `<text font-size="${fs}" x="${CX + 6 * u}" y="${CY - m * k + 15 * u}">${m} m</text>`;
+  }
+  h += `<line x1="${CX - RPX}" y1="${CY}" x2="${CX + RPX}" y2="${CY}" stroke="var(--muted)" stroke-opacity=".45" stroke-width="${u}"/>`;
+  h += `<rect x="${CX - 11 * u}" y="${CY - 4 * u}" width="${22 * u}" height="${8 * u}" rx="${3 * u}" fill="var(--text2)"/>`;
+  h += `<text font-size="${fs}" x="${CX + 18 * u}" y="${CY - 3 * u}">Sensor</text>`;
+
+  const counted = S.presence === true;
+  if (!tracks.length && S.distance_cm) {
+    h += `<path d="${arc(S.distance_cm / 100 * k)}" fill="none" stroke="var(--series)" stroke-width="${2 * u}" stroke-dasharray="${7 * u} ${6 * u}"/>`;
+    h += `<text class="val" font-size="${fsv}" x="${CX}" y="${CY - S.distance_cm / 100 * k - 10 * u}" text-anchor="middle">${(S.distance_cm / 100).toFixed(2)} m</text>`;
+  }
+  for (const tr of tracks) {
+    tr.x += (tr.tx - tr.x) * 0.14; tr.y += (tr.ty - tr.y) * 0.14;
+    const last = tr.trail[tr.trail.length - 1];
+    if (!last || Math.hypot(last[0] - tr.x, last[1] - tr.y) > 0.015) { tr.trail.push([tr.x, tr.y]); if (tr.trail.length > 70) tr.trail.shift(); }
+    const [X, Y] = px(tr.x, tr.y);
+    if (tr.trail.length > 1) {
+      const pts = tr.trail.map(p => px(p[0], p[1]).map(v => v.toFixed(1)).join(',')).join(' ');
+      h += `<polyline points="${pts}" fill="none" stroke="${counted ? 'var(--series)' : 'var(--echo)'}" stroke-width="${2 * u}" stroke-linejoin="round" opacity=".28"/>`;
+    }
+    const moving = t - tr.moveAt < 1.5;
+    if (counted) {
+      if (moving) h += `<circle cx="${X}" cy="${Y}" r="${13 * u}" fill="none" stroke="var(--series)" stroke-width="${2 * u}" opacity=".55"/>`;
+      h += `<circle cx="${X}" cy="${Y}" r="${8 * u}" fill="var(--series)" stroke="var(--surface)" stroke-width="${2 * u}"/>`;
+    } else {
+      h += `<circle cx="${X}" cy="${Y}" r="${7 * u}" fill="none" stroke="var(--echo)" stroke-width="${2 * u}" stroke-dasharray="${3 * u} ${3 * u}"/>`;
+    }
+    const right = X < CX + RPX - 80 * u;
+    h += `<text class="val" font-size="${fsv}" x="${X + (right ? 18 : -18) * u}" y="${Y + 5 * u}" text-anchor="${right ? 'start' : 'end'}">${Math.hypot(tr.x, tr.y).toFixed(2)} m</text>`;
+  }
+  radar.innerHTML = h;
+}
+
+function drawTable() {
+  const tbl = $('tbl'), t = NOW();
+  tbl.hidden = !tracks.length;
+  const rows = tracks.map((tr, i) => {
+    const moving = t - tr.moveAt < 1.5, x = flip ? -tr.x : tr.x;
+    const st = S.presence === true ? (moving ? 'Moving' : 'Still') : 'Echo';
+    return `<tr><td>${i + 1}</td><td>${Math.hypot(tr.x, tr.y).toFixed(2)} m</td><td>${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(2)} m</td><td>${tr.y.toFixed(2)} m</td><td>${st}</td></tr>`;
+  });
+  tbl.tBodies[0].innerHTML = rows.join('');
+}
+
+/* ---------- trends: one chart per measure, each on its own axis ---------- */
+function makeChart(host, opts) {
+  let W = 600; const H = 150, L = 34, R = 8, T = 8, B = 22;
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.label}"><g class="a"></g><path class="p" fill="none" stroke="var(--series)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path><line class="x" y1="${T}" y2="${H - B}" stroke="var(--muted)" vector-effect="non-scaling-stroke" visibility="hidden"></line><g class="d"></g></svg><div class="empty" hidden>${opts.empty}</div><div class="tip"></div>`;
+  const svg = host.querySelector('svg'), path = host.querySelector('.p'), axis = host.querySelector('.a'), lineX = host.querySelector('.x'), lone = host.querySelector('.d');
+  const tip = host.querySelector('.tip'), empty = host.querySelector('.empty');
+  let data = [], t1 = 0, y0 = 0, y1 = 1;
+  const xOf = t => L + (1 - (t1 - t) / HISTORY) * (W - L - R);
+  const yOf = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
+  function draw(hist) {
+    W = Math.max(240, Math.round(host.clientWidth));
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    data = hist.filter(d => d[1] != null);
+    t1 = NOW();
+    const vals = data.map(d => d[1]);
+    if (vals.length) {
+      y0 = Math.floor((Math.min(...vals) - 3) / opts.step) * opts.step;
+      y1 = Math.ceil((Math.max(...vals) + 3) / opts.step) * opts.step;
+    } else { [y0, y1] = opts.domain; }
+    let a = '';
+    for (let v = y0; v <= y1; v += opts.step) {
+      a += `<line x1="${L}" x2="${W - R}" y1="${yOf(v)}" y2="${yOf(v)}" stroke="var(--grid)" vector-effect="non-scaling-stroke"/>`;
+      a += `<text x="${L - 6}" y="${yOf(v) + 4}" text-anchor="end">${v}</text>`;
+    }
+    a += `<text x="${L}" y="${H - 5}">15 min ago</text><text x="${W - R}" y="${H - 5}" text-anchor="end">now</text>`;
+    axis.innerHTML = a;
+    let d = '', prev = null, isolated = '';
+    hist.forEach((p, i) => {
+      if (p[1] == null) { prev = null; return; }
+      const gap = prev == null || p[0] - prev > 5;
+      d += (gap ? 'M' : 'L') + xOf(p[0]).toFixed(1) + ' ' + yOf(p[1]).toFixed(1);
+      const nxt = hist[i + 1];
+      if (gap && (!nxt || nxt[1] == null)) isolated += `<circle cx="${xOf(p[0])}" cy="${yOf(p[1])}" r="3" fill="var(--series)"/>`;
+      prev = p[0];
+    });
+    path.setAttribute('d', d);
+    lone.innerHTML = isolated;
+    empty.hidden = data.length > 0;
+  }
+  svg.addEventListener('pointermove', e => {
+    if (!data.length) return;
+    const rect = svg.getBoundingClientRect();
+    const tAt = t1 - (1 - ((e.clientX - rect.left) / rect.width * W - L) / (W - L - R)) * HISTORY;
+    let best = data[0];
+    for (const p of data) if (Math.abs(p[0] - tAt) < Math.abs(best[0] - tAt)) best = p;
+    if (Math.abs(best[0] - tAt) > 20) { hide(); return; }
+    const X = xOf(best[0]);
+    lineX.setAttribute('x1', X); lineX.setAttribute('x2', X); lineX.setAttribute('visibility', 'visible');
+    tip.style.display = 'block';
+    tip.innerHTML = `<b>${Math.round(best[1])} ${opts.unit}</b> at ${new Date(best[0] * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+    const px = X / W * rect.width;
+    tip.style.left = Math.max(0, Math.min(rect.width - tip.offsetWidth, px - tip.offsetWidth / 2)) + 'px';
+  });
+  const hide = () => { lineX.setAttribute('visibility', 'hidden'); tip.style.display = 'none'; };
+  svg.addEventListener('pointerleave', hide);
+  return { draw };
+}
+const EMPTY = 'No readings yet. Needs a still person within about 1.5 m of the sensor.';
+const chartH = makeChart($('cHeart'), { label: 'Heart rate over the last 15 minutes', unit: 'bpm', step: 20, domain: [60, 100], empty: EMPTY });
+const chartB = makeChart($('cBreath'), { label: 'Breathing rate over the last 15 minutes', unit: 'breaths/min', step: 5, domain: [10, 25], empty: EMPTY });
+let hHeart = [], hBreath = [];
+
+/* ---------- state -> page ---------- */
+function render() {
+  const pageOk = NOW() - lastMsg < 10;
+  const live = pageOk && S.connected;
+  const dot = $('connDot');
+  dot.style.background = live ? 'var(--good)' : (pageOk ? 'var(--warn)' : 'var(--crit)');
+  $('connText').textContent = live ? 'Live' : (pageOk ? 'Sensor offline, reconnecting' : 'Page lost its connection');
+
+  const p = live ? S.presence : null;
+  $('hero').textContent = !live ? 'No data' : p === true ? 'Someone is here' : p === false ? 'Room looks empty' : 'Waiting for the sensor';
+  $('since').textContent = live && p != null && S.presence_since ? 'For ' + fmtDur(NOW() - S.presence_since) : ' ';
+
+  const dead = !live;
+  const count = dead ? null : p === false ? 0 : S.targets;
+  setValue($('vPeople'), count == null ? null : Math.round(count), '', 'No reading');
+  $('sPeople').textContent = (!dead && p === false && S.targets > 0) ? 'Radar echo ignored, no recent activity' : 'Radar estimate';
+
+  const dist = dead || !S.distance_cm ? null : (S.distance_cm / 100).toFixed(2);
+  setValue($('vDist'), dist, 'm', 'No reading');
+  $('sDist').textContent = 'To the main target';
+
+  const hr = dead ? null : S.heart, br = dead ? null : S.breath;
+  setValue($('vHeart'), hr == null ? null : Math.round(hr), 'bpm', 'No reading');
+  setValue($('vBreath'), br == null ? null : Math.round(br), '/min', 'No reading');
+  $('sHeart').textContent = hr != null ? 'Latest reading' : lastHeartAt ? 'Last reading ' + fmtAgo(lastHeartAt) : 'Needs a still person within 1.5 m';
+  $('sBreath').textContent = br != null ? 'Latest reading' : lastBreathAt ? 'Last reading ' + fmtAgo(lastBreathAt) : 'Needs a still person within 1.5 m';
+  const beat = $('beat'), bre = $('breathe');
+  beat.classList.toggle('on', hr != null && hr > 0);
+  bre.classList.toggle('on', br != null && br > 0);
+  if (hr > 0) beat.style.setProperty('--period', (60 / hr).toFixed(2) + 's');
+  if (br > 0) bre.style.setProperty('--period', (60 / br).toFixed(2) + 's');
+
+  setValue($('vMove'), dead || S.movement == null ? null : Math.round(S.movement), '', 'No reading');
+  setValue($('vLux'), dead || S.lux == null ? null : (S.lux < 10 ? S.lux.toFixed(1) : Math.round(S.lux)), 'lx', 'No reading');
+
+  const w = S.wifi;
+  $('fWifi').textContent = w == null ? '–' : Math.round(w) + ' dBm' + (w <= -80 ? ', weak' : '');
+  $('fUp').textContent = S.uptime == null ? '–' : fmtDur(S.uptime);
+  $('fFw').textContent = S.firmware || '–';
+  drawTable();
+}
+
+function applyState(next) {
+  const t = NOW();
+  lastMsg = t;
+  const newFrame = next.points_at !== S.points_at;
+  S = next;
+  if (S.heart != null) lastHeartAt = t;
+  if (S.breath != null) lastBreathAt = t;
+  if (newFrame && S.points) ingestPoints(S.points);
+}
+window.applyState = applyState;
+
+function sample() {
+  const t = Math.floor(NOW());
+  const live = S.connected && NOW() - lastMsg < 10;
+  for (const [arr, v] of [[hHeart, live ? S.heart : null], [hBreath, live ? S.breath : null]]) {
+    arr.push([t, v]);
+    while (arr.length && arr[0][0] < t - HISTORY) arr.shift();
+  }
+  chartH.draw(hHeart); chartB.draw(hBreath);
+}
+
+async function boot() {
+  $('flip').addEventListener('click', () => {
+    flip = !flip;
+    try { localStorage.setItem('presence-flip', flip ? '1' : '0'); } catch (e) {}
+  });
+  try {
+    const r = await (await fetch('api/state')).json();
+    hHeart = r.history.map(h => [h[0], h[1]]);
+    hBreath = r.history.map(h => [h[0], h[2]]);
+    for (const h of r.history) { if (h[1] != null) lastHeartAt = h[0]; if (h[2] != null) lastBreathAt = h[0]; }
+    applyState(r.state);
+  } catch (e) {}
+  const es = new EventSource('events');
+  es.onmessage = e => applyState(JSON.parse(e.data));
+  setInterval(render, 250);
+  setInterval(sample, 1000);
+  const loop = () => { drawRadar(); requestAnimationFrame(loop); };
+  loop(); render(); sample();
+}
+boot();
+</script>
+</body>
+</html>

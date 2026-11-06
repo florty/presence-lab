@@ -1,0 +1,11 @@
+# Presence lab page: http://10.49.10.194:8096/ (see README.md)
+services:
+  presence-lab:
+    build: .
+    container_name: presence-lab
+    env_file: .env
+    ports:
+      - "8096:8096"
+    volumes:
+      - ./web:/app/web:ro
+    restart: unless-stopped
