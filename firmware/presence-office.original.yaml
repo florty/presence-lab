@@ -1,0 +1,167 @@
+# Office presence / vital-signs sensor — Seeed Studio MR60BHA2 kit (XIAO ESP32-C6 + 60 GHz mmWave radar).
+#
+# Wi-Fi / API / OTA come from common/common.yaml, like the rest of the fleet.
+# Based on Seeed's v3.5 example (limengdu/MR60BHA2_ESPHome_external_components), but using the
+# seeed_mr60bha2 component that ships in ESPHome core, so the build needs no GitHub access (the HA
+# VM only reaches allowlisted FQDNs). Entity names are unchanged from Seeed's example.
+#
+# Presence works with a still person; heart rate / breathing only report when the person is still
+# and within ~1.5 m of the radar.
+#
+# The radar only sends values while it has something to report, so without help HA keeps showing the
+# last heart rate / distance / target count for hours. Vitals and distance therefore go to "unknown"
+# (NaN) after 60 s without an update and as soon as presence clears; the target count drops to 0.
+# The radar component pushes 0 for vitals/distance when the target is lost; those 0s are turned into
+# unknown too, so graphs show a gap instead of a drop to zero.
+#
+# Presence: the radar's own flag can stay set for hours on a static reflector (seen overnight 2026-10-11:
+# 1 target, no vitals, no distance). HA's presence = radar flag AND, within the last 5 min, either a
+# distance/vitals reading or movement in the point cloud (non-zero Doppler — a seated person's
+# micro-movement; furniture reads 0). "Movement" = point-cloud frames with movement per 10 s (about
+# 100 frames), as a diagnostic to tune this.
+#
+# components/seeed_mr60bha2 is a local copy of the ESPHome 2026.9.1 component with the Doppler tracking
+# added (see "Local addition" in the .cpp/.h). Re-copy it from ESPHome core when upgrading.
+
+substitutions:
+  device_name: presence-office
+  friendly_name: Presence Office
+  device_ip: 10.49.5.97
+
+# Settings for Wifi, Web Server, API, etc
+<<: !include common/common.yaml
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: false
+  project:
+    name: "seeedstudio.mr60bha2_kit"
+    version: "3.5"
+  platformio_options:
+    board_upload.maximum_size: 4194304
+
+esp32:
+  board: esp32-c6-devkitc-1
+  variant: esp32c6
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+# Seeed's kit logs on the USB serial/JTAG port (overrides the bare `logger:` in common.yaml)
+logger:
+  hardware_uart: USB_SERIAL_JTAG
+  level: INFO
+
+light:
+  - platform: esp32_rmt_led_strip
+    id: led_ring
+    name: "Seeed MR60BHA2 RGB Light"
+    pin: GPIO1
+    num_leds: 1
+    rgb_order: GRB
+    chipset: ws2812
+
+i2c:
+  sda: GPIO22
+  scl: GPIO23
+  scan: true
+  id: bus_a
+
+uart:
+  id: uart_bus
+  baud_rate: 115200
+  rx_pin: 17
+  tx_pin: 16
+  parity: NONE
+  stop_bits: 1
+
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [seeed_mr60bha2]
+
+seeed_mr60bha2:
+  id: my_seeed_mr60bha2
+
+globals:
+  # millis() of the last distance / heart / breath reading from the radar
+  - id: last_activity
+    type: uint32_t
+    initial_value: '0'
+
+binary_sensor:
+  # Raw radar flag. It can stay "on" for hours with nothing in the room (seen overnight 2026-10-11),
+  # so HA gets the template below instead.
+  - platform: seeed_mr60bha2
+    has_target:
+      id: radar_target
+      internal: true
+
+  # Same name as before, so the HA entity / unique ID stays binary_sensor.presence_office_presence.
+  # Present = radar says so AND distance/vitals or point-cloud movement within the last 5 minutes.
+  - platform: template
+    name: "Person Information"
+    device_class: occupancy
+    icon: mdi:motion-sensor
+    lambda: |-
+      const uint32_t now = millis(), window = 5 * 60 * 1000;
+      bool active = (now - id(last_activity) < window) ||
+                    (id(my_seeed_mr60bha2).get_last_motion_ms() != 0 &&
+                     now - id(my_seeed_mr60bha2).get_last_motion_ms() < window);
+      return id(radar_target).state && active;
+    on_release:
+      then:
+        - lambda: |-
+            id(vital_breath).publish_state(NAN);
+            id(vital_heart).publish_state(NAN);
+            id(target_distance).publish_state(NAN);
+            id(target_count).publish_state(0);
+
+sensor:
+  - platform: bh1750
+    name: "Seeed MR60BHA2 Illuminance"
+    address: 0x23
+    update_interval: 1s
+  - platform: seeed_mr60bha2
+    breath_rate:
+      id: vital_breath
+      on_raw_value:
+        - lambda: 'if (!std::isnan(x) && x != 0) id(last_activity) = millis();'
+      name: "Real-time respiratory rate"
+      filters:
+        - lambda: 'return x == 0 ? NAN : x;'
+        - timeout: 60s
+    heart_rate:
+      id: vital_heart
+      on_raw_value:
+        - lambda: 'if (!std::isnan(x) && x != 0) id(last_activity) = millis();'
+      name: "Real-time heart rate"
+      filters:
+        - lambda: 'return x == 0 ? NAN : x;'
+        - timeout: 60s
+    distance:
+      id: target_distance
+      on_raw_value:
+        - lambda: 'if (!std::isnan(x) && x != 0) id(last_activity) = millis();'
+      name: "Distance to detection object"
+      filters:
+        - lambda: 'return x == 0 ? NAN : x;'
+        - timeout: 60s
+    num_targets:
+      id: target_count
+      name: "Target Number"
+  - platform: template
+    name: "Movement"
+    icon: mdi:motion
+    entity_category: diagnostic
+    state_class: measurement
+    accuracy_decimals: 0
+    update_interval: 10s
+    lambda: 'return id(my_seeed_mr60bha2).take_motion_frames();'
+  - platform: wifi_signal
+    name: "Wifi Signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "Uptime"

@@ -1,0 +1,7 @@
+firmware/secrets.yaml
+firmware/common/
+firmware/.esphome/
+.env
+.venv/
+__pycache__/
+.venv-esphome/
