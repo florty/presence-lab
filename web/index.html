@@ -8,10 +8,10 @@
 <style>
 :root{color-scheme:light;
   --bg:#f4f4f1;--surface:#fcfcfb;--text:#0b0b0b;--text2:#52514e;--muted:#6f6d68;--grid:#e1e0d9;--border:rgba(11,11,11,.10);
-  --series:#2a78d6;--series-soft:rgba(42,120,214,.09);--good:#0ca30c;--warn:#fab219;--crit:#d03b3b;--echo:#898781}
+  --series:#2a78d6;--series-soft:rgba(42,120,214,.09);--heart:#e34948;--breath:#1baf7a;--good:#0ca30c;--warn:#fab219;--crit:#d03b3b;--echo:#898781}
 @media (prefers-color-scheme:dark){:root{color-scheme:dark;
   --bg:#111110;--surface:#1a1a19;--text:#f0efec;--text2:#c3c2b7;--muted:#98968f;--grid:#2c2c2a;--border:rgba(255,255,255,.10);
-  --series:#3987e5;--series-soft:rgba(57,135,229,.12);--echo:#898781}}
+  --series:#3987e5;--series-soft:rgba(57,135,229,.12);--heart:#e66767;--breath:#199e70;--echo:#898781}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -38,12 +38,19 @@ h2{font-size:14px;font-weight:600;margin:0}
 .value small{font-size:14px;font-weight:500;color:var(--text2);margin-left:3px}
 .value.none{font-size:19px;font-weight:500;color:var(--muted);letter-spacing:0}
 .sub{font-size:12.5px;color:var(--muted);margin-top:auto}
-.beat{width:15px;height:15px;fill:var(--series);opacity:0;flex:none;transition:opacity .3s}
+.beat{width:15px;height:15px;fill:var(--heart);opacity:0;flex:none;transition:opacity .3s}
 .beat.on{opacity:1;animation:beat var(--period,1s) ease-out infinite}
-.breathe{width:14px;height:14px;border-radius:50%;background:var(--series);opacity:0;flex:none;transition:opacity .3s}
+.breathe{width:14px;height:14px;border-radius:50%;background:var(--breath);opacity:0;flex:none;transition:opacity .3s}
 .breathe.on{opacity:1;animation:breathe var(--period,4s) ease-in-out infinite}
 @keyframes beat{0%{transform:scale(1.2)}35%{transform:scale(.85)}100%{transform:scale(.85)}}
 @keyframes breathe{0%,100%{transform:scale(.45)}50%{transform:scale(1.15)}}
+.tile.vital{--tone:var(--series);background:color-mix(in srgb,var(--tone) 7%,var(--surface));border-color:color-mix(in srgb,var(--tone) 28%,transparent);transition:background .4s,border-color .4s}
+.tile.vital.idle{background:var(--surface);border-color:var(--border)}
+.tone-heart{--tone:var(--heart)}
+.tone-breath{--tone:var(--breath)}
+.tile.vital.tone-heart{--tone:var(--heart)}
+.tile.vital.tone-breath{--tone:var(--breath)}
+.chart-card{border-top:3px solid var(--tone)}
 .meter{height:6px;border-radius:3px;background:var(--series-soft);overflow:hidden;margin:3px 0 5px}
 .meter i{display:block;height:100%;width:0;border-radius:3px;background:var(--series);transition:width .6s}
 @media (prefers-reduced-motion:reduce){.beat.on,.breathe.on,.sdot.here::after{animation:none}}
@@ -112,8 +119,8 @@ footer b{font-weight:500;color:var(--text2)}
     <div class="tiles">
       <div class="card tile"><div class="label">People</div><div class="value" id="vPeople"></div><div class="sub" id="sPeople"></div></div>
       <div class="card tile"><div class="label">Distance</div><div class="value" id="vDist"></div><div class="sub" id="sDist"></div></div>
-      <div class="card tile"><div class="label">Heart rate <svg class="beat" id="beat" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8.5-5.2-10.3-10.4C.5 6.8 3 3.5 6.6 3.5c2.2 0 4.2 1.2 5.4 3.1 1.2-1.9 3.2-3.1 5.4-3.1 3.6 0 6.1 3.3 4.9 7.1C20.5 15.8 12 21 12 21z"/></svg></div><div class="value" id="vHeart"></div><div class="sub" id="sHeart"></div></div>
-      <div class="card tile"><div class="label">Breathing <i class="breathe" id="breathe" aria-hidden="true"></i></div><div class="value" id="vBreath"></div><div class="sub" id="sBreath"></div></div>
+      <div class="card tile vital tone-heart idle" id="tHeart"><div class="label">Heart rate <svg class="beat" id="beat" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8.5-5.2-10.3-10.4C.5 6.8 3 3.5 6.6 3.5c2.2 0 4.2 1.2 5.4 3.1 1.2-1.9 3.2-3.1 5.4-3.1 3.6 0 6.1 3.3 4.9 7.1C20.5 15.8 12 21 12 21z"/></svg></div><div class="value" id="vHeart"></div><div class="sub" id="sHeart"></div></div>
+      <div class="card tile vital tone-breath idle" id="tBreath"><div class="label">Breathing <i class="breathe" id="breathe" aria-hidden="true"></i></div><div class="value" id="vBreath"></div><div class="sub" id="sBreath"></div></div>
       <div class="card tile"><div class="label">Movement</div><div class="value" id="vMove"></div><div class="meter" aria-hidden="true"><i id="mMove"></i></div><div class="sub">Frames with movement, last 10 s</div></div>
       <div class="card tile"><div class="label">Light</div><div class="value" id="vLux"></div><div class="sub" id="sLux"></div></div>
     </div>
@@ -128,8 +135,8 @@ footer b{font-weight:500;color:var(--text2)}
   </section>
 
   <section class="trends">
-    <div class="card"><div class="chart-head"><h2>Heart rate <span class="chart-sub">bpm, last 15 min</span></h2><span class="chart-sub" id="sumHeart"></span></div><div class="chart" id="cHeart"></div></div>
-    <div class="card"><div class="chart-head"><h2>Breathing <span class="chart-sub">per minute, last 15 min</span></h2><span class="chart-sub" id="sumBreath"></span></div><div class="chart" id="cBreath"></div></div>
+    <div class="card chart-card tone-heart"><div class="chart-head"><h2>Heart rate <span class="chart-sub">bpm, last 15 min</span></h2><span class="chart-sub" id="sumHeart"></span></div><div class="chart" id="cHeart"></div></div>
+    <div class="card chart-card tone-breath"><div class="chart-head"><h2>Breathing <span class="chart-sub">per minute, last 15 min</span></h2><span class="chart-sub" id="sumBreath"></span></div><div class="chart" id="cBreath"></div></div>
   </section>
 
   <footer>
@@ -147,7 +154,7 @@ const NS = 'http://www.w3.org/2000/svg';
 const HISTORY = 900;
 let S = {};
 let lastMsg = 0;
-let lastHeartAt = null, lastBreathAt = null;
+let lastHeartAt = null, lastBreathAt = null, lastDistAt = null;
 let flip = false;
 try { flip = localStorage.getItem('presence-flip') === '1'; } catch (e) {}
 
@@ -292,7 +299,7 @@ function recent(arr, secs) {
 }
 function makeChart(host, opts) {
   let W = 600; const H = 150, L = 34, R = 8, T = 8, B = 22;
-  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.label}"><g class="a"></g><path class="ar" fill="var(--series-soft)"></path><path class="p" fill="none" stroke="var(--series)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path><line class="x" y1="${T}" y2="${H - B}" stroke="var(--muted)" vector-effect="non-scaling-stroke" visibility="hidden"></line><g class="d"></g></svg><div class="empty" hidden>${opts.empty}</div><div class="tip"></div>`;
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.label}"><g class="a"></g><path class="ar" style="fill:color-mix(in srgb,var(--tone) 13%,transparent)"></path><path class="p" fill="none" stroke="var(--tone)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path><line class="x" y1="${T}" y2="${H - B}" stroke="var(--muted)" vector-effect="non-scaling-stroke" visibility="hidden"></line><g class="d"></g></svg><div class="empty" hidden>${opts.empty}</div><div class="tip"></div>`;
   const svg = host.querySelector('svg'), path = host.querySelector('.p'), area = host.querySelector('.ar'), axis = host.querySelector('.a'), lineX = host.querySelector('.x'), lone = host.querySelector('.d');
   const tip = host.querySelector('.tip'), empty = host.querySelector('.empty');
   let data = [], t1 = 0, y0 = 0, y1 = 1;
@@ -326,7 +333,7 @@ function makeChart(host, opts) {
       const seg = (gap ? 'M' : 'L') + xOf(p[0]).toFixed(1) + ' ' + yOf(p[1]).toFixed(1);
       d += seg; ar += seg;
       const nxt = hist[i + 1];
-      if (gap && (!nxt || nxt[1] == null)) isolated += `<circle cx="${xOf(p[0])}" cy="${yOf(p[1])}" r="3" fill="var(--series)"/>`;
+      if (gap && (!nxt || nxt[1] == null)) isolated += `<circle cx="${xOf(p[0])}" cy="${yOf(p[1])}" r="3" fill="var(--tone)"/>`;
       prev = p[0];
     });
     closeRun();
@@ -413,18 +420,23 @@ function render() {
   setValue($('vPeople'), count == null ? null : Math.round(count), '', 'No reading');
   $('sPeople').textContent = (!dead && p === false && S.targets > 0) ? 'Radar echo ignored, no recent activity' : 'Radar estimate';
 
-  const dcm = dead || !S.distance_cm ? null : (recent(hDist, 3) ?? S.distance_cm);
+  if (S.distance_cm) lastDistAt = NOW();
+  const dcm = dead || lastDistAt == null || NOW() - lastDistAt > 5 ? null : (recent(hDist, 3) ?? S.distance_cm);
   const dist = dcm == null ? null : (dcm / 100).toFixed(2);
   setValue($('vDist'), dist, 'm', 'No reading');
   $('sDist').textContent = dist == null ? 'Nothing in range right now' : 'To the main target';
 
-  const hr = dead || S.heart == null ? null : (recent(hHeart, 10) ?? S.heart);
-  const br = dead || S.breath == null ? null : (recent(hBreath, 10) ?? S.breath);
+  /* Ride out sub-second radar dropouts instead of flashing "No reading" */
+  const fresh = at => at != null && NOW() - at < 5;
+  const hr = dead || !fresh(lastHeartAt) ? null : (recent(hHeart, 10) ?? S.heart);
+  const br = dead || !fresh(lastBreathAt) ? null : (recent(hBreath, 10) ?? S.breath);
   setValue($('vHeart'), hr == null ? null : Math.round(hr), 'bpm', 'No reading');
   setValue($('vBreath'), br == null ? null : Math.round(br), '/min', 'No reading');
   $('sHeart').textContent = hr != null ? '10 s median' : lastHeartAt ? 'Last reading ' + fmtAgo(lastHeartAt) : 'Needs a still person within 1.5 m';
   $('sBreath').textContent = br != null ? '10 s median' : lastBreathAt ? 'Last reading ' + fmtAgo(lastBreathAt) : 'Needs a still person within 1.5 m';
   const beat = $('beat'), bre = $('breathe');
+  $('tHeart').classList.toggle('idle', hr == null);
+  $('tBreath').classList.toggle('idle', br == null);
   beat.classList.toggle('on', hr != null && hr > 0);
   bre.classList.toggle('on', br != null && br > 0);
   if (hr > 0) beat.style.setProperty('--period', (60 / hr).toFixed(2) + 's');

@@ -14,6 +14,9 @@ KEY = os.environ["ESPHOME_KEY"]
 WEB = Path(__file__).parent / "web"
 HISTORY_SECS = 900
 STALE_SECS = 30
+# The radar's target flag drops out for a fraction of a second while someone sits still, so "empty"
+# only counts once it has lasted this long. Tune here if leaving the room feels too slow to show.
+EMPTY_HOLD_SECS = 15
 
 log = logging.getLogger("bridge")
 state = {
@@ -23,6 +26,8 @@ state = {
 }
 history = deque(maxlen=HISTORY_SECS)  # [epoch_s, heart, breath, distance_cm, presence]
 version = 0
+raw_presence = None
+raw_empty_since = None
 
 FIELDS = {
     "person_information": "presence", "target_number": "targets",
@@ -41,6 +46,33 @@ def put(field, value):
     if state[field] != value:
         state[field] = value
         version += 1
+
+
+def set_presence(value, connected_at):
+    if value != state["presence"]:
+        # The first reading after a bridge start doesn't tell us when it really began.
+        put("since_exact", state["presence"] is not None and time.time() - connected_at > 10)
+        put("presence_since", round(time.time()))
+        put("presence", value)
+
+
+def on_presence(value, connected_at):
+    global raw_presence, raw_empty_since
+    raw_presence = value
+    if value is False:
+        raw_empty_since = raw_empty_since or time.time()
+        if state["presence"] is None:
+            set_presence(False, connected_at)
+    else:
+        raw_empty_since = None
+        set_presence(value, connected_at)
+
+
+def settle_presence():
+    """Accept "empty" once the radar has reported it for EMPTY_HOLD_SECS without interruption."""
+    if raw_presence is False and state["presence"] is True and time.time() - raw_empty_since >= EMPTY_HOLD_SECS:
+        set_presence(False, 0)
+        put("targets", 0.0)
 
 
 async def sensor_loop():
@@ -71,11 +103,14 @@ async def sensor_loop():
                 elif name in FIELDS:
                     missing = getattr(s, "missing_state", False)
                     value = None if missing else clean(s.state)
-                    if name == "person_information" and value != state["presence"]:
-                        # The first reading after a bridge start doesn't tell us when it really began.
-                        put("since_exact", state["presence"] is not None and time.time() - connected_at > 10)
-                        put("presence_since", round(time.time()))
-                    put(FIELDS[name], value)
+                    if name == "person_information":
+                        on_presence(value, connected_at)
+                    elif name == "target_number":
+                        # Keep the last count through a dropout; settle_presence clears it when really empty.
+                        if value or state["presence"] is not True:
+                            put("targets", value)
+                    else:
+                        put(FIELDS[name], value)
 
             client.subscribe_states(on_state)
             put("firmware", info.esphome_version)
@@ -102,6 +137,7 @@ async def sensor_loop():
 async def history_loop():
     while True:
         await asyncio.sleep(1)
+        settle_presence()
         live = state["connected"]
         history.append([int(time.time())] + [state[k] if live else None for k in ("heart", "breath", "distance_cm", "presence")])
 
