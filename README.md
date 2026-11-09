@@ -134,10 +134,9 @@ What the bridge does besides passing values through:
 
 **Rates from the waveform (experimental).** The page takes the last 30 s of each waveform and finds its
 strongest rhythm in the normal range (6–36 breaths/min, 45–150 bpm). It shows a number only when that
-rhythm clearly dominates, the person's distance stayed within 5 cm, and two estimates 2 s apart agree;
-otherwise it says why not. "Rhythm strength" is the share of the signal in that rhythm. The radar's own
-number is shown next to it for comparison. On synthetic test signals it gives the right answer; with a
-real person it has not yet been checked against a chest strap or watch.
+rhythm clearly dominates and two estimates 2 s apart agree; otherwise it says why not. "Rhythm strength" is the share of the signal in that rhythm. The radar's own
+number is shown next to it for comparison. It gives the right answer on synthetic test signals. With a
+real person it rarely shows a number, because neither waveform has one clear rhythm (see Known limits).
 
 `probe.py` is a small command-line tool that connects with the same `.env` and prints every entity and
 a stream of values, which helps when checking a new firmware.
@@ -168,9 +167,14 @@ Check the exact entity IDs in Home Assistant; they depend on the device name.
 - Two-person tracking has only been tested with demo data, not two real people.
 - The cause of the presence dropouts is unknown. They may come from the radar or from the lab firmware;
   there was too little comparable data from the original firmware to tell.
-- In the first recordings, with the person not keeping still, the heartbeat waveform was noisy and its
-  strongest rhythm jumped between about 60 and 125 bpm while the radar reported 70–99. The breathing
-  waveform was much cleaner. A test with someone sitting still is still to do.
+- Two minutes with a person sitting still at about 0.9 m: for the first 50 s, the heartbeat waveform's
+  strongest rhythm (77–81 bpm) was within about 4 bpm of the radar (75–78), then it wandered to 56 and
+  124 bpm. Its rhythm strength, as the page measures it, stayed at 9–18%. The breathing waveform looks
+  smooth, but has no single dominant rhythm either: its strongest frequency (5–10/min) was likely slow
+  drift. Counting its upward swings gave 12.4/min, while the radar's median was 18. Neither was checked
+  against counted breaths or a pulse.
+- The radar's distance jumped by 20–40 cm during that still test, so it can't tell you whether someone
+  is keeping still.
 - History lives in memory, so restarting the container clears the charts.
 - The page has no login and shows vital signs. Keep it on your local network.
 

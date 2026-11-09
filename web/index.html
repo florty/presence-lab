@@ -528,7 +528,8 @@ function drawWave() {
     `<text x="${L}" y="${H - 4}">30 s ago</text><text x="${W - R}" y="${H - 4}" text-anchor="end">now</text>`;
 }
 /* Rate from the waveform: strongest frequency in the band over the last 30 s. Shown only when one frequency
-   clearly dominates, the person's distance held steady, and two estimates in a row agree. */
+   clearly dominates and two estimates in a row agree. (Radar distance is no use as a stillness check: it
+   jumped 20-40 cm while someone sat still.) */
 const est = { heart: { prev: null, shown: null }, breath: { prev: null, shown: null } };
 function peakRate(col, lo, hi, bw) {
   const end = wave.length ? wave[wave.length - 1][1] : 0;
@@ -546,19 +547,15 @@ function peakRate(col, lo, hi, bw) {
   return { rate: bestF * 60, share };
 }
 function updateEstimates() {
-  const dist = hDist.slice(-WAVE_SECS).map(d => d[1]).filter(v => v != null);
-  const hasDist = dist.length >= WAVE_SECS * 0.7, steady = hasDist && Math.max(...dist) - Math.min(...dist) <= 5;
   for (const [key, col, lo, hi, bw, agree, minShare, unit, el] of [
     ['breath', 3, 0.1, 0.6, 0.025, 2, 0.35, '/min', 'wBreath'],
     ['heart', 4, 0.75, 2.5, 0.05, 5, 0.3, 'bpm', 'wHeart']]) {
     const e = est[key], r = peakRate(col, lo, hi, bw);
     let why = '';
     if (!r) why = wave.length ? 'Not enough waveform yet' : 'No waveform';
-    else if (!hasDist) why = 'No steady distance reading';
-    else if (!steady) why = 'Distance changing, waiting for a still person';
     else if (r.share < minShare) why = 'No clear rhythm';
     else if (e.prev == null || Math.abs(e.prev - r.rate) > agree) why = 'Checking it holds steady';
-    e.prev = r && steady && r.share >= minShare ? r.rate : null;
+    e.prev = r && r.share >= minShare ? r.rate : null;
     e.shown = why ? null : r.rate;
     const v = $(el), radar = key === 'heart' ? S.heart : S.breath;
     if (e.shown != null) { v.className = 'rv'; v.innerHTML = `${Math.round(e.shown)}<small>${unit}</small>`; }
