@@ -125,6 +125,11 @@ text_sensor:
     id: radar_points
     name: "Radar Points"
     update_interval: never
+  # Lab: chest-movement waveform (radar frame 0x0A13), about 10 samples/s, last 12 repeated in each update
+  - platform: template
+    id: radar_phases
+    name: "Radar Phases"
+    update_interval: never
 
 interval:
   - interval: 100ms
@@ -132,6 +137,8 @@ interval:
       - lambda: |-
           auto s = id(my_seeed_mr60bha2).take_points_json();
           if (!s.empty()) id(radar_points).publish_state(s);
+          auto w = id(my_seeed_mr60bha2).take_phases_json();
+          if (!w.empty()) id(radar_phases).publish_state(w);
 
 sensor:
   - platform: bh1750

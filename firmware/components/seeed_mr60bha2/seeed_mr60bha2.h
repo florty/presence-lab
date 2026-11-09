@@ -23,6 +23,8 @@ static const uint16_t PEOPLE_EXIST_TYPE_BUFFER = 0x0F09;
 static const uint16_t HEART_RATE_TYPE_BUFFER = 0x0A15;
 static const uint16_t DISTANCE_TYPE_BUFFER = 0x0A16;
 static const uint16_t PRINT_CLOUD_BUFFER = 0x0A04;
+// Lab addition: chest-movement phases (total, breathing, heart), three little-endian floats.
+static const uint16_t HEART_BREATH_PHASE_BUFFER = 0x0A13;
 
 class MR60BHA2Component final : public Component,
                                 public uart::UARTDevice {  // The class name must be the name defined by text_sensor.py
@@ -66,7 +68,37 @@ class MR60BHA2Component final : public Component,
     return out + "]]";
   }
 
+  // Lab addition: the newest phase samples as JSON [[seq,ms,total,breath,heart],...], or "" if nothing new.
+  // Each call repeats the last PHASE_REPEAT samples: the native API keeps only the newest state per entity
+  // when it is busy, so a single dropped update would otherwise lose samples. seq counts every sample since
+  // boot, so the reader drops duplicates and can spot real gaps; ms is millis() when the sample arrived.
+  std::string take_phases_json() {
+    if (this->phase_head_ == this->phase_sent_)
+      return "";
+    this->phase_sent_ = this->phase_head_;
+    uint32_t from = this->phase_head_ > PHASE_REPEAT ? this->phase_head_ - PHASE_REPEAT : 0;
+    std::string out = "[";
+    char buf[96];
+    for (uint32_t i = from; i < this->phase_head_; i++) {
+      const PhaseSample &s = this->phases_[i % MAX_PHASES];
+      snprintf(buf, sizeof(buf), "%s[%u,%u,%.4f,%.4f,%.4f]", i == from ? "" : ",", (unsigned) i, (unsigned) s.ms,
+               s.total, s.breath, s.heart);
+      out += buf;
+    }
+    return out + "]";
+  }
+
  protected:
+  struct PhaseSample {
+    uint32_t ms;
+    float total, breath, heart;
+  };
+  static const uint32_t MAX_PHASES = 16;
+  static const uint32_t PHASE_REPEAT = 12;  // about 1.2 s at the radar's ~10 samples/s
+  PhaseSample phases_[MAX_PHASES];
+  uint32_t phase_head_{0};  // next sample to write
+  uint32_t phase_sent_{0};  // phase_head_ at the last take_phases_json()
+
   struct CloudPoint {
     float x, y;
     int32_t doppler, cluster;

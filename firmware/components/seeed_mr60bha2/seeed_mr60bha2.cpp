@@ -111,7 +111,7 @@ bool MR60BHA2Component::validate_message_() {
 
   if (frame_type != BREATH_RATE_TYPE_BUFFER && frame_type != HEART_RATE_TYPE_BUFFER &&
       frame_type != DISTANCE_TYPE_BUFFER && frame_type != PEOPLE_EXIST_TYPE_BUFFER &&
-      frame_type != PRINT_CLOUD_BUFFER) {
+      frame_type != PRINT_CLOUD_BUFFER && frame_type != HEART_BREATH_PHASE_BUFFER) {
     return false;
   }
 
@@ -237,6 +237,17 @@ void MR60BHA2Component::process_frame_(uint16_t frame_id, uint16_t frame_type, c
           this->last_motion_ms_ = millis();
           this->motion_frames_++;
         }
+      }
+      break;
+    case HEART_BREATH_PHASE_BUFFER:
+      // Lab addition: keep the newest waveform samples for take_phases_json().
+      if (length >= 12) {
+        PhaseSample &s = this->phases_[this->phase_head_ % MAX_PHASES];
+        s.ms = millis();
+        memcpy(&s.total, data, sizeof(float));
+        memcpy(&s.breath, data + 4, sizeof(float));
+        memcpy(&s.heart, data + 8, sizeof(float));
+        this->phase_head_++;
       }
       break;
     default:
