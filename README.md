@@ -30,9 +30,13 @@ These are estimates from a hobby radar, not medical measurements.
 
 ## Hardware
 
-The kit is a single board from Seeed Studio. No soldering or wiring is needed: plug in a USB-C cable and
-flash it. Product details and photos are on the
+**Kit used:** Seeed Studio XIAO 60GHz mmWave Human Breathing Heartbeat Sensor (MR60BHA2), bought from
+[OpenELAB](https://openelab.de/products/seeed-studio-xiao-60ghz-1). It is the MR60BHA2 radar board with a
+XIAO ESP32-C6 plugged in, in a 3D-printed case, and arrives with ESPHome already installed. No soldering or
+wiring is needed: plug in a USB-C cable and flash it. Product details and photos are on the
 [Seeed wiki](https://wiki.seeedstudio.com/getting_started_with_mr60bha2_mmwave_kit/).
+
+Seeed gives about 1.5 m for breathing and heart rate and about 6 m for detecting a still person.
 
 ![What is on the board, with pins](docs/images/hardware.svg)
 
