@@ -22,6 +22,8 @@ needed.
 - **Tiles:** people count, distance, heart rate (red), breathing rate (green), movement and room light.
   Heart rate and breathing are 10 s medians, because single radar frames can jump.
 - **Presence timeline:** present, empty and no-data stretches over the last 15 minutes.
+- **Chest movement:** the radar's own breathing and heartbeat waveforms, live, over the last 30 s, with
+  rates worked out from them independently of the radar's numbers (see below).
 - **Charts:** heart rate and breathing over the last 15 minutes, with average and range.
 - **Theme button:** automatic (follows your system), light or dark. The choice is remembered.
 
@@ -70,14 +72,20 @@ Two ESPHome configs are in `firmware/`:
 
 - `presence-office.original.yaml` is a cleaned-up version of Seeed's ESPHome example. It works with Home
   Assistant on its own and with this page, minus the map.
-- `presence-office.yaml` is the same plus a `radar_points` text sensor that streams the radar's point
-  cloud 10 times a second. The page needs this for the map and the target table.
+- `presence-office.yaml` is the same plus two text sensors the page needs: `radar_points` (the point
+  cloud, about 10 times a second, for the map and target table) and `radar_phases` (the chest-movement
+  waveform, for the "Chest movement" card).
 
 Both use a local copy of ESPHome's `seeed_mr60bha2` component (`firmware/components/seeed_mr60bha2`),
 with these additions:
 
 - **Point-cloud decoding.** Frame type `0x0A04` carries, per target: x and y in metres (float), a
   Doppler index (int32) and a cluster index (int32). The stock component ignores this frame.
+- **Waveform decoding.** Frame type `0x0A13` carries three floats: total, breathing and heart phase,
+  which is the chest movement the radar computes its rates from. It arrives about 10 times a second. The
+  ESPHome native API keeps only the newest value of an entity when it is busy, which lost about 1 in 6
+  samples, so each update repeats the last 12 samples with a running sequence number and the bridge
+  drops duplicates. With that, a 60 s test had no gaps.
 - **Movement tracking.** A non-zero Doppler index means something is moving, even a seated person
   breathing. Furniture reads 0. Exposed as a "Movement" sensor (frames with movement per 10 s).
 - **Steadier presence for Home Assistant.** The radar's own presence flag can stay on for hours on a
@@ -87,7 +95,8 @@ with these additions:
   and when presence clears, instead of showing an old number for hours. Zeros from the radar become
   gaps, not drops to zero.
 
-Other radar frames used: `0x0F09` presence, `0x0A14` breathing rate, `0x0A15` heart rate, `0x0A16`
+Frame layout follows Seeed's
+[Arduino library](https://github.com/Seeed-Projects/Seeed-mmWave-library). Other radar frames used: `0x0F09` presence, `0x0A14` breathing rate, `0x0A15` heart rate, `0x0A16`
 distance.
 
 ### Flashing
@@ -123,6 +132,13 @@ What the bridge does besides passing values through:
 - **Reconnects** if the sensor goes quiet for 30 s or restarts.
 - **Sends a heartbeat** every 3 s, so the page can tell "sensor offline" from "page lost connection".
 
+**Rates from the waveform (experimental).** The page takes the last 30 s of each waveform and finds its
+strongest rhythm in the normal range (6–36 breaths/min, 45–150 bpm). It shows a number only when that
+rhythm clearly dominates, the person's distance stayed within 5 cm, and two estimates 2 s apart agree;
+otherwise it says why not. "Rhythm strength" is the share of the signal in that rhythm. The radar's own
+number is shown next to it for comparison. On synthetic test signals it gives the right answer; with a
+real person it has not yet been checked against a chest strap or watch.
+
 `probe.py` is a small command-line tool that connects with the same `.env` and prints every entity and
 a stream of values, which helps when checking a new firmware.
 
@@ -132,7 +148,18 @@ The ESPHome native API accepts more than one client, so the page and Home Assist
 to the original firmware. For experiments with the lab firmware, I disabled the device in Home
 Assistant (Settings → Devices & services → ESPHome → the device → Disable) so the two weren't fighting
 over updates. To go back: flash `presence-office.original.yaml` (or keep the lab one, Home Assistant
-just gains a "Radar Points" entity) and re-enable the device.
+gains "Radar Points" and "Radar Phases" entities) and re-enable the device. Those two update about 10 times
+a second, so if you keep the lab firmware, exclude them from Home Assistant's recorder:
+
+```yaml
+recorder:
+  exclude:
+    entities:
+      - sensor.presence_office_radar_points
+      - sensor.presence_office_radar_phases
+```
+
+Check the exact entity IDs in Home Assistant; they depend on the device name.
 
 ## Known limits
 
@@ -141,6 +168,9 @@ just gains a "Radar Points" entity) and re-enable the device.
 - Two-person tracking has only been tested with demo data, not two real people.
 - The cause of the presence dropouts is unknown. They may come from the radar or from the lab firmware;
   there was too little comparable data from the original firmware to tell.
+- In the first recordings, with the person not keeping still, the heartbeat waveform was noisy and its
+  strongest rhythm jumped between about 60 and 125 bpm while the radar reported 70–99. The breathing
+  waveform was much cleaner. A test with someone sitting still is still to do.
 - History lives in memory, so restarting the container clears the charts.
 - The page has no login and shows vital signs. Keep it on your local network.
 

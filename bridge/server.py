@@ -22,9 +22,12 @@ log = logging.getLogger("bridge")
 state = {
     "connected": False, "presence": None, "targets": None, "distance_cm": None, "heart": None,
     "breath": None, "lux": None, "movement": None, "wifi": None, "uptime": None,
-    "points": [], "points_at": None, "firmware": None, "presence_since": None, "since_exact": False,
+    "points": [], "points_at": None, "wave_tail": [], "firmware": None, "presence_since": None, "since_exact": False,
 }
 history = deque(maxlen=HISTORY_SECS)  # [epoch_s, heart, breath, distance_cm, presence]
+# Chest-movement waveform from the radar (frame 0x0A13), about 10 samples/s: [seq, device_ms, total, breath, heart]
+wave = deque(maxlen=600)
+WAVE_TAIL = 15  # samples sent in each live update; the page merges them by seq
 version = 0
 raw_presence = None
 raw_empty_since = None
@@ -68,6 +71,22 @@ def on_presence(value, connected_at):
         set_presence(value, connected_at)
 
 
+def on_phases(text):
+    """Each update repeats the last ~12 samples, so keep only ones newer than what we have."""
+    try:
+        samples = json.loads(text)
+    except ValueError:
+        return
+    for smp in samples:
+        if len(smp) != 5:
+            continue
+        if wave and smp[0] < wave[-1][0] - 50:  # sequence restarted: the sensor rebooted
+            wave.clear()
+        if not wave or smp[0] > wave[-1][0]:
+            wave.append(smp)
+    put("wave_tail", list(wave)[-WAVE_TAIL:])
+
+
 def settle_presence():
     """Accept "empty" once the radar has reported it for EMPTY_HOLD_SECS without interruption."""
     if raw_presence is False and state["presence"] is True and time.time() - raw_empty_since >= EMPTY_HOLD_SECS:
@@ -94,7 +113,9 @@ async def sensor_loop():
                 nonlocal last_rx
                 last_rx = time.time()
                 name = names.get(s.key)
-                if name == "radar_points":
+                if name == "radar_phases":
+                    on_phases(s.state)
+                elif name == "radar_points":
                     try:
                         put("points", json.loads(s.state)[1])
                         put("points_at", round(time.time(), 2))
@@ -143,7 +164,7 @@ async def history_loop():
 
 
 async def api_state(_):
-    return web.json_response({"state": state, "history": list(history), "now": time.time()},
+    return web.json_response({"state": state, "history": list(history), "wave": list(wave), "now": time.time()},
                              headers={"Cache-Control": "no-store"})
 
 

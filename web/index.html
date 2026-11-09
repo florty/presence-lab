@@ -86,6 +86,19 @@ td{color:var(--text2);padding:3px 8px 3px 0;border-top:1px solid var(--grid)}
 #strip i.none{background:repeating-linear-gradient(135deg,var(--grid) 0 3px,transparent 3px 7px)}
 .strip-axis{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:5px}
 .strip-wrap .tip{top:-32px}
+.wave-card{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:6px 20px}
+.wave-head{grid-column:1/-1}
+.wave-plots{position:relative;min-width:0}
+.wave-plots svg{display:block;width:100%;height:190px}
+.wave-plots text{font:12px system-ui,sans-serif;fill:var(--muted)}
+.wave-read{display:flex;flex-direction:column;gap:14px;justify-content:center}
+.wave-read .rl{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.wave-read .rv{font-size:26px;font-weight:600;line-height:32px;font-variant-numeric:tabular-nums}
+.wave-read .rv small{font-size:13px;font-weight:500;color:var(--text2);margin-left:3px}
+.wave-read .rv.none{font-size:14px;line-height:20px;padding:6px 0;font-weight:500;color:var(--muted)}
+.wave-read .rs{font-size:12px;color:var(--muted)}
+.sw{width:12px;height:3px;border-radius:2px;flex:none}
+@media (max-width:700px){.wave-card{grid-template-columns:minmax(0,1fr)}.wave-read{flex-direction:row;flex-wrap:wrap;gap:12px 28px}}
 .chart{position:relative;margin-top:6px}
 .chart svg{display:block;width:100%;height:150px;touch-action:pan-y}
 .chart text{font:12px system-ui,sans-serif;fill:var(--muted)}
@@ -142,6 +155,15 @@ footer b{font-weight:500;color:var(--text2)}
     </div>
     <div class="strip-wrap"><div id="strip" role="img" aria-label="Presence over the last 15 minutes"></div><div class="tip" id="stripTip"></div></div>
     <div class="strip-axis"><span>15 min ago</span><span>now</span></div>
+  </section>
+
+  <section class="card wave-card">
+    <div class="wave-head chart-head"><h2>Chest movement <span class="chart-sub">live waveform from the radar, last 30 s</span></h2></div>
+    <div class="wave-plots"><svg id="wave" viewBox="0 0 600 190" role="img" aria-label="Breathing and heartbeat waveforms from the radar over the last 30 seconds. The estimated rates are listed beside it."></svg><div class="empty" id="waveEmpty" hidden></div></div>
+    <div class="wave-read">
+      <div><div class="rl"><i class="sw" style="background:var(--breath)"></i>Breathing, from waveform</div><div class="rv" id="wBreath"></div><div class="rs" id="wBreathS"></div></div>
+      <div><div class="rl"><i class="sw" style="background:var(--heart)"></i>Heart, from waveform</div><div class="rv" id="wHeart"></div><div class="rs" id="wHeartS"></div></div>
+    </div>
   </section>
 
   <section class="trends">
@@ -465,6 +487,86 @@ function render() {
   drawTable();
 }
 
+/* ---------- chest-movement waveform (radar frame 0x0A13) ---------- */
+const WAVE_SECS = 30;
+let wave = [], waveAt = 0;  // [seq, device_ms, total, breath, heart]; waveAt = performance.now() of the newest sample
+function ingestWave(samples) {
+  for (const smp of samples || []) {
+    const last = wave.length ? wave[wave.length - 1][0] : -1;
+    if (smp[0] < last - 50) wave = [];  // sensor rebooted
+    if (!wave.length || smp[0] > wave[wave.length - 1][0]) { wave.push(smp); waveAt = performance.now(); }
+  }
+  if (wave.length) { const cut = wave[wave.length - 1][1] - (WAVE_SECS + 2) * 1000; while (wave[0][1] < cut) wave.shift(); }
+}
+let waveDrawn = 0;
+function drawWave() {
+  if (performance.now() - waveDrawn < 50) return;  // 20 fps is plenty for a 30 s window
+  waveDrawn = performance.now();
+  const svg = $('wave'), W = Math.max(240, Math.round(svg.clientWidth || 600)), H = 190, L = 8, R = 8, mid = 88, B = 20;
+  const fresh = wave.length && performance.now() - waveAt < 3000;
+  $('waveEmpty').hidden = !!fresh;
+  if (!fresh) {
+    $('waveEmpty').textContent = wave.length ? 'Waveform paused. The radar sends it while someone is in front of it.'
+      : 'Waiting for the waveform. Needs the lab firmware and a person in front of the sensor.';
+    svg.innerHTML = ''; return;
+  }
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const tNow = wave[wave.length - 1][1] + Math.min(performance.now() - waveAt, 400);
+  const xOf = ms => L + (1 - (tNow - ms) / (WAVE_SECS * 1000)) * (W - L - R);
+  const panel = (col, top, bottom, color, name) => {
+    const pts = wave.filter(p => tNow - p[1] <= WAVE_SECS * 1000);
+    const amp = Math.max(0.05, ...pts.map(p => Math.abs(p[col]))) * 1.05, c = (top + 16 + bottom) / 2, h = (bottom - top - 16) / 2;
+    let d = '', prev = null;
+    for (const p of pts) {
+      d += (prev == null || p[1] - prev > 600 ? 'M' : 'L') + xOf(p[1]).toFixed(1) + ' ' + (c - p[col] / amp * h).toFixed(1);
+      prev = p[1];
+    }
+    return `<line x1="${L}" x2="${W - R}" y1="${c}" y2="${c}" stroke="var(--grid)"/><text x="${L}" y="${top + 11}">${name}</text>` +
+      `<path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  };
+  svg.innerHTML = panel(3, 6, mid - 4, 'var(--breath)', 'Breathing') + panel(4, mid + 4, H - B - 2, 'var(--heart)', 'Heartbeat') +
+    `<text x="${L}" y="${H - 4}">30 s ago</text><text x="${W - R}" y="${H - 4}" text-anchor="end">now</text>`;
+}
+/* Rate from the waveform: strongest frequency in the band over the last 30 s. Shown only when one frequency
+   clearly dominates, the person's distance held steady, and two estimates in a row agree. */
+const est = { heart: { prev: null, shown: null }, breath: { prev: null, shown: null } };
+function peakRate(col, lo, hi, bw) {
+  const end = wave.length ? wave[wave.length - 1][1] : 0;
+  const pts = wave.filter(p => end - p[1] <= WAVE_SECS * 1000);
+  if (pts.length < WAVE_SECS * 7) return null;  // under ~70% of the expected samples
+  const mean = pts.reduce((a, p) => a + p[col], 0) / pts.length;
+  let total = 0, best = 0, bestF = 0; const spec = [];
+  for (let f = lo; f <= hi + 1e-9; f += 1 / 240) {
+    let c = 0, s = 0;
+    for (const p of pts) { const a = 2 * Math.PI * f * p[1] / 1000, v = p[col] - mean; c += v * Math.cos(a); s += v * Math.sin(a); }
+    const pw = c * c + s * s; spec.push([f, pw]); total += pw;
+    if (pw > best) { best = pw; bestF = f; }
+  }
+  const share = spec.filter(([f]) => Math.abs(f - bestF) <= bw).reduce((a, [, pw]) => a + pw, 0) / total;
+  return { rate: bestF * 60, share };
+}
+function updateEstimates() {
+  const dist = hDist.slice(-WAVE_SECS).map(d => d[1]).filter(v => v != null);
+  const hasDist = dist.length >= WAVE_SECS * 0.7, steady = hasDist && Math.max(...dist) - Math.min(...dist) <= 5;
+  for (const [key, col, lo, hi, bw, agree, minShare, unit, el] of [
+    ['breath', 3, 0.1, 0.6, 0.025, 2, 0.35, '/min', 'wBreath'],
+    ['heart', 4, 0.75, 2.5, 0.05, 5, 0.3, 'bpm', 'wHeart']]) {
+    const e = est[key], r = peakRate(col, lo, hi, bw);
+    let why = '';
+    if (!r) why = wave.length ? 'Not enough waveform yet' : 'No waveform';
+    else if (!hasDist) why = 'No steady distance reading';
+    else if (!steady) why = 'Distance changing, waiting for a still person';
+    else if (r.share < minShare) why = 'No clear rhythm';
+    else if (e.prev == null || Math.abs(e.prev - r.rate) > agree) why = 'Checking it holds steady';
+    e.prev = r && steady && r.share >= minShare ? r.rate : null;
+    e.shown = why ? null : r.rate;
+    const v = $(el), radar = key === 'heart' ? S.heart : S.breath;
+    if (e.shown != null) { v.className = 'rv'; v.innerHTML = `${Math.round(e.shown)}<small>${unit}</small>`; }
+    else { v.className = 'rv none'; v.textContent = why; }
+    $(el + 'S').textContent = (r ? `Rhythm strength ${Math.round(r.share * 100)}%` : '') + (radar != null ? (r ? ' · ' : '') + `radar says ${Math.round(radar)}` : '');
+  }
+}
+
 function applyState(next) {
   const t = NOW();
   lastMsg = t;
@@ -473,6 +575,7 @@ function applyState(next) {
   if (S.heart != null) lastHeartAt = t;
   if (S.breath != null) lastBreathAt = t;
   if (newFrame && S.points) ingestPoints(S.points);
+  ingestWave(S.wave_tail);
 }
 window.applyState = applyState;
 
@@ -520,6 +623,7 @@ async function boot() {
     hBreath = r.history.map(h => [h[0], h[2]]);
     hDist = r.history.map(h => [h[0], h[3]]);
     hPres = r.history.map(h => [h[0], h[4]]);
+    ingestWave(r.wave);
     for (const h of r.history) { if (h[1] != null) lastHeartAt = h[0]; if (h[2] != null) lastBreathAt = h[0]; }
     applyState(r.state);
   } catch (e) {}
@@ -527,8 +631,9 @@ async function boot() {
   es.onmessage = e => applyState(JSON.parse(e.data));
   setInterval(render, 250);
   setInterval(sample, 1000);
-  const loop = () => { drawRadar(); requestAnimationFrame(loop); };
-  loop(); render(); sample();
+  setInterval(updateEstimates, 2000);
+  const loop = () => { drawRadar(); drawWave(); requestAnimationFrame(loop); };
+  loop(); render(); sample(); updateEstimates();
 }
 boot();
 </script>
