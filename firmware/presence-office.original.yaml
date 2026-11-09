@@ -1,9 +1,8 @@
 # Office presence / vital-signs sensor — Seeed Studio MR60BHA2 kit (XIAO ESP32-C6 + 60 GHz mmWave radar).
 #
-# Wi-Fi / API / OTA come from common/common.yaml, like the rest of the fleet.
+# Wi-Fi / API / OTA come from common/common.yaml (copy common.example.yaml there, secrets in secrets.yaml).
 # Based on Seeed's v3.5 example (limengdu/MR60BHA2_ESPHome_external_components), but using the
-# seeed_mr60bha2 component that ships in ESPHome core, so the build needs no GitHub access (the HA
-# VM only reaches allowlisted FQDNs). Entity names are unchanged from Seeed's example.
+# seeed_mr60bha2 component that ships in ESPHome core, so the build needs no GitHub access. Entity names are unchanged from Seeed's example.
 #
 # Presence works with a still person; heart rate / breathing only report when the person is still
 # and within ~1.5 m of the radar.
@@ -26,7 +25,7 @@
 substitutions:
   device_name: presence-office
   friendly_name: Presence Office
-  device_ip: 10.49.5.97
+  device_ip: 10.49.5.97  # only used if your common.yaml sets a static IP
 
 # Settings for Wifi, Web Server, API, etc
 <<: !include common/common.yaml

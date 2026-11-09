@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 330" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif">
+  <style>
+    .card{fill:#fcfcfb;stroke:#d6d5ce;stroke-width:1.5}
+    .t{font-size:16px;font-weight:650;fill:#0b0b0b}
+    .s{font-size:13px;fill:#52514e}
+    .a{stroke:#2a78d6;stroke-width:2.5;fill:none;marker-end:url(#h)}
+    .d{stroke:#898781;stroke-width:2;fill:none;stroke-dasharray:6 5;marker-end:url(#g)}
+    .l{font-size:12.5px;fill:#0b0b0b}
+    .lm{font-size:12px;fill:#6f6d68}
+  </style>
+  <defs>
+    <marker id="h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2a78d6"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#898781"/></marker>
+  </defs>
+  <rect width="880" height="330" rx="16" fill="#f4f4f1"/>
+  <text x="32" y="44" class="t" font-size="19">How data gets from the radar to the page</text>
+
+  <rect x="32" y="90" width="180" height="110" rx="14" class="card"/>
+  <text x="50" y="120" class="t">Radar</text>
+  <text x="50" y="142" class="s">MR60BHA2</text>
+  <text x="50" y="162" class="s">binary frames</text>
+
+  <rect x="250" y="90" width="180" height="110" rx="14" class="card"/>
+  <text x="268" y="120" class="t">ESP32-C6</text>
+  <text x="268" y="142" class="s">ESPHome firmware</text>
+  <text x="268" y="162" class="s">decodes frames</text>
+  <text x="268" y="182" class="s">into entities</text>
+
+  <rect x="468" y="90" width="180" height="110" rx="14" class="card"/>
+  <text x="486" y="120" class="t">Bridge</text>
+  <text x="486" y="142" class="s">Python, in Docker</text>
+  <text x="486" y="162" class="s">holds the API key,</text>
+  <text x="486" y="182" class="s">smooths, keeps 15 min</text>
+
+  <rect x="686" y="90" width="162" height="110" rx="14" class="card"/>
+  <text x="704" y="120" class="t">Browser</text>
+  <text x="704" y="142" class="s">web/index.html</text>
+  <text x="704" y="162" class="s">no build step</text>
+
+  <path class="a" d="M212 145 H248"/>
+  <path class="a" d="M430 145 H466"/>
+  <path class="a" d="M648 145 H684"/>
+  <text x="231" y="226" class="l" text-anchor="middle">UART</text>
+  <text x="449" y="226" class="l" text-anchor="middle">Wi-Fi, native API</text>
+  <text x="449" y="244" class="lm" text-anchor="middle">port 6053, encrypted</text>
+  <text x="667" y="226" class="l" text-anchor="middle">HTTP :8096</text>
+  <text x="667" y="244" class="lm" text-anchor="middle">/api/state, /events (SSE)</text>
+
+  <rect x="250" y="262" width="180" height="48" rx="12" fill="none" stroke="#b5b4ad" stroke-dasharray="6 5"/>
+  <text x="268" y="291" class="s">or Home Assistant</text>
+  <path class="d" d="M300 200 V258"/>
+</svg>

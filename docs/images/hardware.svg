@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 420" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif">
+  <style>
+    .card{fill:#fcfcfb;stroke:#d6d5ce;stroke-width:1.5}
+    .t{font-size:16px;font-weight:650;fill:#0b0b0b}
+    .s{font-size:13px;fill:#52514e}
+    .pin{font-size:12.5px;fill:#0b0b0b;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    .wire{stroke:#2a78d6;stroke-width:2.5;fill:none}
+    .wl{font-size:12px;fill:#2a78d6;font-weight:600}
+  </style>
+  <rect width="880" height="420" rx="16" fill="#f4f4f1"/>
+  <text x="32" y="44" class="t" font-size="19">Seeed MR60BHA2 kit: what is on the board</text>
+  <text x="32" y="68" class="s">Pins as configured in firmware/presence-office.yaml</text>
+
+  <!-- ESP32 -->
+  <rect x="320" y="120" width="240" height="190" rx="14" class="card"/>
+  <text x="340" y="150" class="t">XIAO ESP32-C6</text>
+  <text x="340" y="171" class="s">Runs ESPHome. 2.4 GHz Wi-Fi.</text>
+  <text x="340" y="205" class="pin">GPIO16  TX → radar</text>
+  <text x="340" y="225" class="pin">GPIO17  RX ← radar</text>
+  <text x="340" y="250" class="pin">GPIO22  SDA</text>
+  <text x="340" y="270" class="pin">GPIO23  SCL</text>
+  <text x="340" y="295" class="pin">GPIO1   LED data</text>
+
+  <!-- Radar -->
+  <rect x="32" y="120" width="220" height="130" rx="14" class="card"/>
+  <circle cx="60" cy="150" r="7" fill="#2a78d6"/>
+  <text x="76" y="155" class="t">MR60BHA2 radar</text>
+  <text x="52" y="180" class="s">60 GHz mmWave</text>
+  <text x="52" y="200" class="s">Presence, distance, people,</text>
+  <text x="52" y="218" class="s">heart rate, breathing,</text>
+  <text x="52" y="236" class="s">point cloud</text>
+  <path class="wire" d="M252 200 H320"/>
+  <path class="wire" d="M252 220 H320"/>
+  <text x="258" y="190" class="wl">UART</text>
+  <text x="258" y="240" class="wl">115200</text>
+
+  <!-- BH1750 -->
+  <rect x="628" y="120" width="220" height="90" rx="14" class="card"/>
+  <text x="648" y="150" class="t">BH1750</text>
+  <text x="648" y="172" class="s">Ambient light, lux</text>
+  <text x="648" y="192" class="pin">I²C address 0x23</text>
+  <path class="wire" d="M560 245 H596 V170 H628"/>
+  <path class="wire" d="M560 265 H604 V180 H628" opacity=".55"/>
+  <text x="566" y="236" class="wl">I²C</text>
+
+  <!-- LED -->
+  <rect x="628" y="240" width="220" height="70" rx="14" class="card"/>
+  <text x="648" y="270" class="t">WS2812 RGB LED</text>
+  <text x="648" y="292" class="s">One pixel, GRB order</text>
+  <path class="wire" d="M560 290 H628"/>
+
+  <!-- USB -->
+  <rect x="320" y="340" width="240" height="56" rx="14" class="card"/>
+  <text x="340" y="364" class="t">USB-C</text>
+  <text x="340" y="384" class="s">5 V power, flashing, serial logs</text>
+  <path class="wire" d="M440 310 V340" stroke="#898781"/>
+</svg>

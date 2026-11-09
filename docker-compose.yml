@@ -1,4 +1,4 @@
-# Presence lab page: http://10.49.10.194:8096/ (see README.md)
+# Presence page on port 8096 (see README.md)
 services:
   presence-lab:
     build: .
